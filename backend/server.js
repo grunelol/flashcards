@@ -8,9 +8,8 @@ const { Pool } = require('pg');
 const app = express();
 
 // --- Middleware ---
-// Enable CORS - Configure allowed origins later based on deployment plan
-// For now, allow all for local development ease, but restrict in production!
-app.use(cors());
+// Enable CORS - Restrict to deployed frontend URL
+app.use(cors({ origin: 'https://flashcardsgrune.netlify.app' }));
 // Parse JSON request bodies
 app.use(express.json());
 
