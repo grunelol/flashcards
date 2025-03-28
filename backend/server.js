@@ -127,6 +127,7 @@ app.delete('/cards/:id', async (req, res, next) => {
 
 // DELETE /cards/all - Delete all flashcards
 app.delete('/cards/all', async (req, res, next) => {
+  console.log(`Received request: DELETE ${req.path}`); // Add logging
   try {
     // TRUNCATE is faster than DELETE FROM for clearing a whole table
     // Use with caution! It also resets sequences (like SERIAL id).
