@@ -52,7 +52,7 @@ let deleteSelectedCardsBtn = null;
 let cancelDeleteBtn = null;
 
 // --- API Endpoint ---
-const API_BASE_URL = '/api'; // Replace with your actual backend URL if different
+const API_BASE_URL = 'https://flashcards-backend-wju3.onrender.com'; // Replace with your actual backend URL if different
 
 // --- State Variables ---
 let flashcardsData = []; // Holds ALL card objects { id, question, answer } from backend

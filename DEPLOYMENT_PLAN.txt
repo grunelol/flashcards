@@ -1,4 +1,4 @@
-# Free Hosting Plan: Enhanced Flashcards Web Application
+    # Free Hosting Plan: Enhanced Flashcards Web Application
 
 This document outlines the steps to deploy the Enhanced Flashcards web application (frontend) and a corresponding backend with a database using free-tier services.
 
