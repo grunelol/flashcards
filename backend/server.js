@@ -131,7 +131,8 @@ app.delete('/cards/all', async (req, res, next) => {
     // TRUNCATE is faster than DELETE FROM for clearing a whole table
     // Use with caution! It also resets sequences (like SERIAL id).
     // If foreign keys exist, DELETE FROM might be required or TRUNCATE ... CASCADE.
-    await pool.query('TRUNCATE TABLE cards RESTART IDENTITY');
+    // Using DELETE FROM instead of TRUNCATE for potentially better compatibility
+    await pool.query('DELETE FROM cards');
     console.log('All cards deleted successfully.');
     res.status(204).send(); // Success, no content
   } catch (err) {
