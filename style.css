@@ -1,0 +1,516 @@
+/* --- Global Styles & Variables --- */
+:root {
+    --bg-color: #f8f9fa;
+    --container-bg: #ffffff;
+    --primary-color: #20c997; /* Teal */
+    --primary-hover: #1baa80;
+    --secondary-color: #6c757d; /* Gray */
+    --secondary-hover: #5a6268;
+    --card-back-bg: #e6fffa; /* Light teal */
+    --text-color: #495057;
+    --text-muted-color: #6c757d;
+    --border-color: #dee2e6;
+    --shadow-color: rgba(0, 0, 0, 0.05);
+    --success-color: #28a745;
+    --error-color: #dc3545;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107; /* For difficult cards */
+    --learned-color: var(--success-color); /* For learned cards */
+    --font-family: 'Poppins', sans-serif;
+
+    /* Progress Bar */
+    --progress-bg: #e9ecef;
+    --progress-bar-color: var(--primary-color);
+
+    /* Input/Select */
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --input-focus-border: var(--primary-color);
+    --input-focus-shadow: rgba(32, 201, 151, 0.2);
+}
+
+/* --- Dark Mode Variables --- */
+body.dark-mode {
+    --bg-color: #212529;
+    --container-bg: #343a40;
+    --primary-color: #20c997; /* Keep teal vibrant */
+    --primary-hover: #1baa80;
+    --secondary-color: #adb5bd;
+    --secondary-hover: #ced4da;
+    --card-back-bg: #2c6b5b; /* Darker teal */
+    --text-color: #f8f9fa;
+    --text-muted-color: #adb5bd;
+    --border-color: #495057;
+    --shadow-color: rgba(0, 0, 0, 0.2);
+    --success-color: #198754;
+    --error-color: #dc3545;
+    --info-color: #0dcaf0;
+    --warning-color: #ffc107;
+    --learned-color: #198754;
+
+    /* Progress Bar */
+    --progress-bg: #495057;
+    /* --progress-bar-color: var(--primary-color); */ /* Inherits */
+
+    /* Input/Select */
+    --input-bg: #495057;
+    --input-border: #6c757d;
+    /* --input-focus-border: var(--primary-color); */ /* Inherits */
+    /* --input-focus-shadow: rgba(32, 201, 151, 0.2); */ /* Inherits */
+}
+
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Align to top for longer content */
+    min-height: 100vh;
+    line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Theme transition */
+}
+
+.main-container {
+    background-color: var(--container-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px var(--shadow-color);
+    width: 100%;
+    max-width: 700px; /* Slightly wider for more controls */
+    box-sizing: border-box;
+    transition: background-color 0.3s ease; /* Theme transition */
+}
+
+/* --- Header --- */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.app-header h1 {
+    font-size: 2em;
+    margin: 0; /* Remove default margin */
+    text-align: left;
+}
+
+#themeToggleBtn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted-color);
+    font-size: 1.2em;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+#themeToggleBtn:hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+/* Icon will be set via JS */
+
+
+h2 { /* Section headers */
+    text-align: center;
+    color: var(--text-color);
+    font-size: 1.5em;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-top: 40px; /* Space between sections */
+    margin-bottom: 20px;
+}
+
+hr { display: none; }
+
+/* --- Status Message --- */
+.status-message {
+    text-align: center;
+    padding: 10px 15px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    font-weight: 600;
+    font-size: 0.95em;
+}
+.status-message.success { background-color: var(--success-color); color: white; }
+.status-message.error { background-color: var(--error-color); color: white; }
+.status-message.info { background-color: var(--info-color); color: #000; } /* Adjust text color for light info bg */
+body.dark-mode .status-message.info { color: #fff; } /* Dark mode info text */
+
+
+/* --- Filter/Search Area --- */
+.filter-search-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: rgba(0,0,0,0.02); /* Subtle background */
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+body.dark-mode .filter-search-area {
+    background-color: rgba(255,255,255,0.05);
+}
+
+.filter-group, .search-group, .view-mode-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-grow: 1; /* Allow groups to grow */
+}
+
+.filter-search-area label {
+    font-weight: 600;
+    font-size: 0.9em;
+    color: var(--text-muted-color);
+}
+
+.filter-search-area select,
+.filter-search-area input[type="text"] {
+    padding: 8px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    font-size: 0.95em;
+    flex-grow: 1; /* Allow input/select to fill space */
+    min-width: 150px; /* Prevent excessive shrinking */
+}
+.filter-search-area select:focus,
+.filter-search-area input[type="text"]:focus {
+    outline: none;
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 2px var(--input-focus-shadow);
+}
+
+.view-mode-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+
+/* --- Progress Bar --- */
+.progress-container {
+    width: 100%;
+    background-color: var(--progress-bg);
+    border-radius: 4px;
+    overflow: hidden;
+    height: 8px; /* Slimmer progress bar */
+    margin-bottom: 5px; /* Space before text */
+}
+.progress-bar {
+    height: 100%;
+    width: 0%; /* Initial width */
+    background-color: var(--progress-bar-color);
+    border-radius: 4px;
+    transition: width 0.3s ease-out;
+}
+.progress-text {
+    text-align: center;
+    font-size: 0.85em;
+    color: var(--text-muted-color);
+    margin-bottom: 25px;
+}
+
+
+/* --- Flashcard Area --- */
+.flashcard-area {
+    margin-bottom: 30px;
+}
+
+.flashcard-container {
+    perspective: 1000px;
+    width: 100%;
+    max-width: 450px; /* Adjusted max width */
+    height: 280px; /* Adjusted height */
+    margin: 0 auto 15px auto; /* Center the card, less bottom margin */
+    position: relative; /* Needed for status controls positioning */
+}
+
+.flashcard {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1);
+    cursor: pointer;
+}
+.flashcard.flipped { transform: rotateY(180deg); }
+
+.flashcard-inner { width: 100%; height: 100%; position: absolute; transform-style: preserve-3d; }
+
+.flashcard-front,
+.flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 25px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 8px var(--shadow-color);
+    font-size: 1.1em;
+    text-align: center;
+    transition: background-color 0.3s ease, border-color 0.3s ease; /* Theme transition */
+}
+
+.flashcard-front { background-color: var(--container-bg); }
+.flashcard-back { transform: rotateY(180deg); background-color: var(--card-back-bg); }
+
+
+.card-counter {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+    color: var(--text-muted-color);
+}
+
+/* --- Navigation & Control Buttons --- */
+.navigation, .control-buttons, .form-actions {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+button {
+    font-family: var(--font-family);
+    padding: 10px 18px; /* Adjusted padding */
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background-color: var(--primary-color);
+    color: white;
+    font-size: 0.95em; /* Slightly smaller base */
+    font-weight: 600;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+body.dark-mode button {
+     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+button:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+body.dark-mode button:hover {
+     box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+button:active {
+     transform: translateY(0px);
+     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+button:disabled {
+    background-color: #cccccc;
+    color: #666;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+body.dark-mode button:disabled {
+    background-color: #5a6268;
+    color: #adb5bd;
+}
+
+
+button.btn-secondary { background-color: var(--secondary-color); }
+button.btn-secondary:hover { background-color: var(--secondary-hover); }
+
+button.btn-warning { background-color: var(--warning-color); color: #333; }
+button.btn-warning:hover { background-color: #ffda6a; } /* Lighter yellow hover */
+
+button.btn-danger { background-color: var(--error-color); color: white; }
+button.btn-danger:hover { background-color: #c82333; } /* Darker red hover */
+
+#exportJsonBtn { background-color: var(--info-color); color: #000; }
+#exportJsonBtn:hover { background-color: #3dd5f3; }
+body.dark-mode #exportJsonBtn { color: #fff; }
+
+
+/* --- Add Card Area --- */
+.add-card-area { margin-top: 30px; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 600; color: var(--text-color); } /* Use text-color */
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    box-sizing: border-box;
+    resize: vertical;
+    font-family: var(--font-family);
+    font-size: 1em;
+    min-height: 80px;
+    background-color: var(--input-bg); /* Input background */
+    color: var(--text-color); /* Input text color */
+}
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 2px var(--input-focus-shadow);
+}
+
+/* --- Modal Styles --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6); /* Darker overlay */
+    padding-top: 60px;
+    animation-name: fadeIn;
+    animation-duration: 0.3s;
+}
+
+.modal-content {
+    background-color: var(--container-bg); /* Use theme variable */
+    margin: 5% auto;
+    padding: 30px;
+    border: 1px solid var(--border-color); /* Use theme variable */
+    border-radius: 10px;
+    width: 80%;
+    max-width: 700px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    position: relative;
+    animation-name: slideIn;
+    animation-duration: 0.3s;
+    color: var(--text-color); /* Ensure text color matches theme */
+}
+
+@keyframes slideIn { from {top: -100px; opacity: 0} to {top: 0; opacity: 1} }
+@keyframes fadeIn { from {opacity: 0} to {opacity: 1} }
+
+.close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+.close-btn:hover, .close-btn:focus { color: var(--text-color); text-decoration: none; }
+
+.modal h2 { margin-top: 0; text-align: left; border-bottom: none; color: var(--text-color); } /* Theme color */
+.modal p { margin-bottom: 10px; }
+.modal pre {
+    background-color: var(--bg-color); /* Theme variable */
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color); /* Theme variable */
+    font-size: 0.9em;
+    margin-bottom: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: var(--text-color); /* Theme color */
+}
+
+.modal textarea { /* Style applies to both import and edit modals */
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid var(--input-border); /* Theme variable */
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: monospace;
+    font-size: 0.95em;
+    min-height: 120px; /* Adjusted height */
+    background-color: var(--input-bg); /* Theme variable */
+    color: var(--text-color); /* Theme variable */
+}
+.modal textarea:focus {
+    outline: none;
+    border-color: var(--input-focus-border); /* Theme variable */
+    box-shadow: 0 0 0 2px var(--input-focus-shadow); /* Theme variable */
+}
+
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+
+
+/* --- Responsive Design --- */
+@media (max-width: 640px) {
+    body { padding: 10px; }
+    .main-container { padding: 15px; max-width: 100%; } /* Full width on small screens */
+    .app-header h1 { font-size: 1.6em; }
+    h2 { font-size: 1.3em; }
+
+    .filter-search-area { flex-direction: column; gap: 10px; align-items: stretch; }
+    .filter-group, .search-group, .view-mode-group { width: 100%; }
+    .filter-search-area select, .filter-search-area input[type="text"] { min-width: 0; } /* Remove min-width */
+
+    .flashcard-container { height: 240px; }
+    .flashcard-front, .flashcard-back { font-size: 1em; padding: 20px; }
+
+    .navigation, .control-buttons, .form-actions { gap: 8px; }
+    button { padding: 8px 12px; font-size: 0.9em; }
+    .card-status-controls { bottom: 5px; right: 5px; }
+    .card-status-controls button { width: 26px; height: 26px; font-size: 0.7em; line-height: 26px; }
+
+    .modal-content { width: 95%; margin: 10% auto; padding: 20px; }
+    .modal textarea { min-height: 100px; }
+}
+
+/* --- Delete Options Modal Specific Styles --- */
+.delete-card-list {
+    max-height: 40vh; /* Limit height and make scrollable */
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: var(--bg-color); /* Match page background */
+}
+
+.delete-card-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 5px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.9em;
+}
+.delete-card-item:last-child {
+    border-bottom: none;
+}
+
+.delete-card-item input[type="checkbox"] {
+    margin-right: 10px;
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0; /* Prevent checkbox from shrinking */
+}
+
+.delete-card-item span {
+    /* Allow text to wrap */
+    white-space: normal;
+    word-break: break-word;
+    flex-grow: 1;
+}
+
+.modal-actions.delete-actions {
+    justify-content: space-between; /* Space out buttons */
+}

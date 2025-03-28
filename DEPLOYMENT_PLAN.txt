@@ -1,0 +1,97 @@
+# Free Hosting Plan: Enhanced Flashcards Web Application
+
+This document outlines the steps to deploy the Enhanced Flashcards web application (frontend) and a corresponding backend with a database using free-tier services.
+
+**Assumptions:**
+
+*   You have accounts on GitHub (or GitLab/Bitbucket), Netlify, and Render.
+*   You have Git installed and basic knowledge of using it.
+*   **Crucially:** You have already developed the **backend application** that implements the API specified in `README.txt`. This plan focuses on *deploying* an existing backend, not creating it from scratch. For the example, we'll assume a Node.js/Express backend.
+
+**Chosen Services (Free Tiers):**
+
+*   **Frontend Hosting:** Netlify (Excellent for static sites like HTML/CSS/JS)
+*   **Backend Hosting:** Render (Free tier for web services)
+*   **Database Hosting:** Render (Free tier for PostgreSQL)
+
+**Deployment Steps:**
+
+**Phase 1: Backend & Database Setup (Render)**
+
+1.  **Create PostgreSQL Database on Render:**
+    *   Log in to your Render dashboard.
+    *   Click "New +" -> "PostgreSQL".
+    *   Choose a unique name for your database (e.g., `flashcards-db`).
+    *   Select a Region closest to you or your users.
+    *   Ensure the "Free" plan is selected.
+    *   Click "Create Database".
+    *   Wait for the database to provision. Once ready, go to its page and find the **"Internal Connection String"** (or "External" if your backend needs it, but internal is usually preferred if backend is also on Render). **Copy this URL securely.** You'll need it for your backend application.
+
+2.  **Prepare Your Backend Application:**
+    *   **Code:** Ensure your backend code (e.g., Node.js/Express) is ready and implements all API endpoints specified in `README.txt`.
+    *   **Database Connection:** Configure your backend to connect to the PostgreSQL database using the connection string obtained from Render. **Crucially, use environment variables** to store this sensitive URL, do not hardcode it. Your backend code should read `process.env.DATABASE_URL` (or a similar variable name).
+    *   **Port:** Configure your backend server to listen on the port specified by the `PORT` environment variable provided by Render (e.g., `const PORT = process.env.PORT || 3000;`). Render injects this variable.
+    *   **CORS:** **This is critical.** Configure Cross-Origin Resource Sharing (CORS) middleware in your backend (e.g., using the `cors` npm package in Node.js). Initially, you might allow all origins (`*`) for testing, but for production, restrict it to your Netlify frontend URL once deployed (e.g., `https://your-netlify-app-name.netlify.app`).
+    *   **`package.json` (Node.js example):** Ensure you have a `start` script defined (e.g., `"start": "node server.js"`) and all dependencies listed.
+    *   **Git Repository:** Push your complete backend code to a GitHub (or similar) repository.
+
+3.  **Deploy Backend Web Service on Render:**
+    *   In the Render dashboard, click "New +" -> "Web Service".
+    *   Connect your GitHub/GitLab account and select the repository containing your backend code.
+    *   Give your service a unique name (e.g., `flashcards-backend`). This will form part of its URL.
+    *   **Region:** Choose the same region as your database.
+    *   **Branch:** Select the branch to deploy (e.g., `main`).
+    *   **Runtime:** Select the appropriate runtime (e.g., `Node`).
+    *   **Build Command:** Enter the command to install dependencies (e.g., `npm install` or `yarn install`).
+    *   **Start Command:** Enter the command to start your server (e.g., `node server.js` or `npm start`).
+    *   **Plan:** Ensure the "Free" plan is selected.
+    *   **Environment Variables:** Click "Advanced", then "Add Environment Variable". Add your `DATABASE_URL` variable and paste the connection string copied in Step 1. Add any other necessary environment variables (e.g., JWT secrets).
+    *   Click "Create Web Service".
+    *   Render will build and deploy your backend. Monitor the logs for any errors.
+    *   Once deployed, Render will provide a public URL for your backend (e.g., `https://flashcards-backend.onrender.com`). **Copy this URL.**
+
+**Phase 2: Frontend Deployment (Netlify)**
+
+4.  **Configure Frontend API URL:**
+    *   Open your local `script.js` file.
+    *   Find the line: `const API_BASE_URL = '/api';`
+    *   **Change it** to the public URL of your deployed Render backend: `const API_BASE_URL = 'https://flashcards-backend.onrender.com';` (Replace with your actual Render URL).
+    *   Save the `script.js` file.
+
+5.  **Prepare Frontend Repository:**
+    *   Ensure your frontend code (`index.html`, `style.css`, the *updated* `script.js`, `README.txt`, `DEPLOYMENT_PLAN.txt`) is in a local Git repository.
+    *   Commit the changes (especially the updated `API_BASE_URL` in `script.js`).
+    *   Push your frontend code to a separate GitHub (or similar) repository (or a different branch/folder in the same repo if preferred, but separate is often cleaner).
+
+6.  **Deploy Frontend on Netlify:**
+    *   Log in to your Netlify dashboard.
+    *   Click "Add new site" -> "Import an existing project".
+    *   Connect to your Git provider (GitHub, etc.) and select the repository containing your frontend code.
+    *   **Branch to deploy:** Select the correct branch (e.g., `main`).
+    *   **Build command:** Leave this blank (as it's a static site with no build step).
+    *   **Publish directory:** Enter `/` (or the specific folder if your `index.html` is not in the root). Netlify usually detects this correctly for simple sites.
+    *   Click "Deploy site".
+    *   Netlify will deploy your frontend files.
+    *   Once deployed, Netlify will provide a public URL (e.g., `https://some-random-name.netlify.app`). You can customize this subdomain in the site settings if desired.
+
+**Phase 3: Final Configuration & Testing**
+
+7.  **Update Backend CORS:**
+    *   Go back to your backend code.
+    *   Update the CORS configuration to **specifically allow requests only from your Netlify frontend URL** (e.g., `https://your-netlify-app-name.netlify.app`). Do not leave it as `*` for security.
+    *   Commit and push this change to your backend repository.
+    *   Render should automatically detect the change and redeploy your backend service. Check the Render deploy logs.
+
+8.  **Test Thoroughly:**
+    *   Open your Netlify frontend URL in your browser.
+    *   Open the browser's Developer Console (F12) to monitor for errors (especially network or CORS errors).
+    *   Test all functionalities: loading cards (should fetch from Render), adding, editing, deleting (single, selected, all), importing, exporting, searching, theme toggle, etc.
+
+**Important Notes on Free Tiers:**
+
+*   **Sleeping:** Render's free web services "spin down" after a period of inactivity (around 15 minutes). The next request will experience a delay (15-30 seconds) while the service starts up again. Free databases do *not* sleep.
+*   **Resource Limits:** Free tiers have limitations on CPU, RAM, database storage, bandwidth, etc. For a simple flashcard app, these are usually sufficient, but be aware of them.
+*   **Database Backups:** Render's free PostgreSQL tier does *not* include automated point-in-time recovery. Consider manual backups if the data is critical.
+*   **Custom Domains:** Using custom domains usually requires upgrading to paid plans on most platforms. The free tiers will use subdomains provided by Render and Netlify.
+
+This plan provides a comprehensive path to deploying your application for free. Remember that the crucial first step is having a working backend implementation.
