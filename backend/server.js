@@ -18,9 +18,9 @@ app.use(express.json());
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   // Add SSL configuration if required by the hosting provider (like Render)
-  // ssl: {
-  //   rejectUnauthorized: false // Necessary for some providers like Heroku/Render free tier
-  // }
+  ssl: {
+    rejectUnauthorized: false // Necessary for some providers like Heroku/Render free tier
+  }
 });
 
 // Test DB connection
