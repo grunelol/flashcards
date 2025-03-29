@@ -8,6 +8,12 @@ const { Pool } = require('pg');
 const app = express();
 
 // --- Middleware ---
+// Log ALL incoming requests (before other middleware)
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.path}`);
+  next(); // Pass control to the next middleware
+});
+
 // Enable CORS - Restrict to deployed frontend URL and explicitly handle preflight
 app.use(cors({
     origin: 'https://flashcardsgrune.netlify.app',
