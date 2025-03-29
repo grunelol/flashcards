@@ -117,27 +117,7 @@ app.put('/cards/:id', async (req, res, next) => {
   }
 });
 
-// DELETE /cards/:id - Delete a specific flashcard
-app.delete('/cards/:id', async (req, res, next) => {
-  const { id } = req.params;
-   if (isNaN(parseInt(id))) {
-      return res.status(400).json({ error: 'Invalid card ID.' });
-  }
-  try {
-    const result = await pool.query('DELETE FROM cards WHERE id = $1', [parseInt(id)]);
-    if (result.rowCount === 0) {
-      // It's debatable whether to return 404 if the item didn't exist.
-      // 204 No Content is often used for successful DELETE regardless.
-      return res.status(404).json({ error: 'Card not found or already deleted.' });
-    }
-    res.status(204).send(); // Success, no content to return
-  } catch (err) {
-    console.error(`Error deleting card ${id}:`, err.stack);
-    next(err);
-  }
-});
-
-// DELETE /cards/all - Delete all flashcards
+// DELETE /cards/all - Delete all flashcards *** MOVED BEFORE /cards/:id ***
 app.delete('/cards/all', async (req, res, next) => {
   console.log(`Received request: DELETE ${req.path}`); // Add logging
   try {
@@ -150,6 +130,27 @@ app.delete('/cards/all', async (req, res, next) => {
     res.status(204).send(); // Success, no content
   } catch (err) {
     console.error('Error deleting all cards:', err.stack);
+    next(err);
+  }
+});
+
+// DELETE /cards/:id - Delete a specific flashcard
+app.delete('/cards/:id', async (req, res, next) => {
+  const { id } = req.params;
+   if (isNaN(parseInt(id))) {
+      // This check should now only catch genuinely invalid numeric IDs
+      return res.status(400).json({ error: 'Invalid card ID.' });
+  }
+  try {
+    const result = await pool.query('DELETE FROM cards WHERE id = $1', [parseInt(id)]);
+    if (result.rowCount === 0) {
+      // It's debatable whether to return 404 if the item didn't exist.
+      // 204 No Content is often used for successful DELETE regardless.
+      return res.status(404).json({ error: 'Card not found or already deleted.' });
+    }
+    res.status(204).send(); // Success, no content to return
+  } catch (err) {
+    console.error(`Error deleting card ${id}:`, err.stack);
     next(err);
   }
 });
