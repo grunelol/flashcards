@@ -320,6 +320,7 @@ async function deleteSelectedCards() {
     if (!deleteCardList) return;
     const checkboxes = deleteCardList.querySelectorAll('input[type="checkbox"]:checked');
     const idsToDelete = Array.from(checkboxes).map(cb => cb.value); // Get IDs
+    console.log("IDs selected for deletion:", idsToDelete); // Log selected IDs
 
     if (idsToDelete.length === 0) {
         alert("No cards selected to delete."); return;
@@ -332,30 +333,43 @@ async function deleteSelectedCards() {
     showStatusMessage(`Deleting ${idsToDelete.length} card(s)...`, 'info', 5000);
     let successCount = 0;
     let failCount = 0;
+    const successfullyDeletedIds = new Set(); // Keep track of IDs confirmed deleted by backend
 
     // Send delete requests (could be parallel or sequential)
     // Parallel example:
-    const deletePromises = idsToDelete.map(id =>
-        fetch(`${API_BASE_URL}/cards/${id}`, { method: 'DELETE' })
+    const deletePromises = idsToDelete.map(id => {
+        console.log(`Attempting to delete card ID: ${id}`); // Log each attempt
+        return fetch(`${API_BASE_URL}/cards/${id}`, { method: 'DELETE' })
             .then(response => {
                 if (response.ok) {
+                    console.log(`Successfully deleted card ID: ${id} (Status: ${response.status})`);
                     successCount++;
+                    successfullyDeletedIds.add(id); // Add ID to the set on success
                 } else {
-                    failCount++;
                     console.error(`Failed to delete card ID ${id}: ${response.status}`);
+                    failCount++;
                 }
+                return response.status; // Return status for potential further checks
             })
             .catch(error => {
                 failCount++;
-                console.error(`Error deleting card ID ${id}:`, error);
-            })
-    );
+                console.error(`Network error deleting card ID ${id}:`, error);
+                return 'Network Error'; // Indicate network error
+            });
+    });
 
     await Promise.all(deletePromises);
+    console.log(`Deletion attempts finished. Success: ${successCount}, Fail: ${failCount}`);
+    console.log("IDs confirmed deleted by backend:", successfullyDeletedIds);
 
-    // Update local state based on successful deletions
-    const idsToDeleteSet = new Set(idsToDelete); // Use original list for filtering state
-    flashcardsData = flashcardsData.filter(card => !idsToDeleteSet.has(card.id)); // Filter by ID
+    // Update local state based ONLY on successfully deleted IDs
+    console.log("Local flashcardsData before filtering:", JSON.parse(JSON.stringify(flashcardsData))); // Deep copy for logging
+    flashcardsData = flashcardsData.filter(card => {
+        // Keep the card if its ID is NOT in the set of successfully deleted IDs
+        // Ensure we compare correctly (e.g., string vs number if needed, though backend ID is likely number)
+        return !successfullyDeletedIds.has(String(card.id)); // Convert card.id to string for comparison if needed
+    });
+    console.log("Local flashcardsData after filtering:", JSON.parse(JSON.stringify(flashcardsData))); // Deep copy for logging
 
     let message = `${successCount} card(s) deleted.`;
     if (failCount > 0) {
