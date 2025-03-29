@@ -4,15 +4,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const morgan = require('morgan'); // Require morgan
 
 const app = express();
 
 // --- Middleware ---
-// Log ALL incoming requests (before other middleware)
-app.use((req, res, next) => {
-  console.log(`Incoming request: ${req.method} ${req.path}`);
-  next(); // Pass control to the next middleware
-});
+// Use morgan for HTTP request logging (using 'dev' format)
+app.use(morgan('dev'));
 
 // Enable CORS - Restrict to deployed frontend URL and explicitly handle preflight
 app.use(cors({
@@ -119,7 +117,7 @@ app.put('/cards/:id', async (req, res, next) => {
 
 // DELETE /cards/all - Delete all flashcards *** MOVED BEFORE /cards/:id ***
 app.delete('/cards/all', async (req, res, next) => {
-  console.log(`Received request: DELETE ${req.path}`); // Add logging
+  console.log(`Received request: DELETE ${req.path}`); // Keep this specific log for now
   try {
     // TRUNCATE is faster than DELETE FROM for clearing a whole table
     // Use with caution! It also resets sequences (like SERIAL id).
