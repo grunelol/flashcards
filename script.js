@@ -72,6 +72,7 @@ let searchTimeout;
 
 // Load data from Backend API
 async function loadData() {
+    console.log("Action: loadData triggered");
     showStatusMessage("Loading cards...", 'info', 5000); // Indicate loading
     try {
         const response = await fetch(`${API_BASE_URL}/cards`);
@@ -105,6 +106,7 @@ async function loadData() {
 
 // Apply Filters and Search
 function applyFiltersAndSearch() {
+    console.log("Action: applyFiltersAndSearch triggered");
     const searchLower = searchTerm.toLowerCase();
     filteredIndices = flashcardsData
         .map((card, index) => ({ card, index }))
@@ -132,6 +134,7 @@ function applyFiltersAndSearch() {
 
 // Display current card
 function displayCard() {
+    // console.log("Action: displayCard triggered"); // This might be too noisy, commenting out
     if (!flashcardContainer || !flashcardFront || !flashcardBack || !currentCardNumEl || !totalCardsEl || !progressText) return;
     flashcardContainer.classList.remove('status-learned', 'status-difficult');
 
@@ -169,6 +172,7 @@ function displayCard() {
 
 // Flip card
 function flipCard() {
+    console.log("Action: flipCard triggered");
     if (filteredIndices.length > 0 && flashcard) {
         flashcard.classList.toggle('flipped');
         isFlipped = !isFlipped;
@@ -177,6 +181,7 @@ function flipCard() {
 
 // Navigate next
 function nextCard() {
+    console.log("Action: nextCard triggered");
     if (currentFilteredIndex < filteredIndices.length - 1) {
         currentFilteredIndex++;
         displayCard();
@@ -185,6 +190,7 @@ function nextCard() {
 
 // Navigate previous
 function prevCard() {
+    console.log("Action: prevCard triggered");
     if (currentFilteredIndex > 0) {
         currentFilteredIndex--;
         displayCard();
@@ -193,6 +199,7 @@ function prevCard() {
 
 // Random Card
 function randomCard() {
+    console.log("Action: randomCard triggered");
     if (filteredIndices.length > 1) {
         let randomIndex;
         do { randomIndex = Math.floor(Math.random() * filteredIndices.length); }
@@ -205,6 +212,7 @@ function randomCard() {
 
 // Add new card (via API)
 async function addCard() {
+    console.log("Action: addCard triggered");
     if (!questionInput || !answerInput) return;
     const question = questionInput.value.trim();
     const answer = answerInput.value.trim();
@@ -242,11 +250,15 @@ async function addCard() {
 
 // Delete *current* card (via API)
 async function deleteCurrentCard() {
+    console.log("Action: deleteCurrentCard triggered");
     if (currentCardIndex === -1 || !flashcardsData[currentCardIndex]) {
         showStatusMessage("No card selected.", 'info'); return;
     }
     const cardToDelete = flashcardsData[currentCardIndex];
-    if (!confirm(`Delete this card?\nQ: ${cardToDelete.question}`)) return;
+    if (!confirm(`Delete this card?\nQ: ${cardToDelete.question}`)) {
+        console.log("Action: deleteCurrentCard cancelled by user");
+        return;
+    }
 
     showStatusMessage("Deleting card...", 'info', 3000);
     try {
@@ -270,6 +282,7 @@ async function deleteCurrentCard() {
 
 // Open Delete Options Modal
 function openDeleteOptionsModal() {
+    console.log("Action: openDeleteOptionsModal triggered");
     if (!deleteOptionsModal || !deleteCardList) {
         console.error("Delete Options modal elements not found!");
         showStatusMessage("Error opening delete options.", 'error');
@@ -295,6 +308,7 @@ function openDeleteOptionsModal() {
 
 // Close Delete Options Modal
 function closeDeleteOptionsModal() {
+    console.log("Action: closeDeleteOptionsModal triggered");
     if (deleteOptionsModal) {
         deleteOptionsModal.style.display = 'none';
     }
@@ -302,6 +316,7 @@ function closeDeleteOptionsModal() {
 
 // Delete Selected Cards (via API)
 async function deleteSelectedCards() {
+    console.log("Action: deleteSelectedCards triggered");
     if (!deleteCardList) return;
     const checkboxes = deleteCardList.querySelectorAll('input[type="checkbox"]:checked');
     const idsToDelete = Array.from(checkboxes).map(cb => cb.value); // Get IDs
@@ -309,7 +324,10 @@ async function deleteSelectedCards() {
     if (idsToDelete.length === 0) {
         alert("No cards selected to delete."); return;
     }
-    if (!confirm(`Delete the ${idsToDelete.length} selected card(s)? This cannot be undone.`)) return;
+    if (!confirm(`Delete the ${idsToDelete.length} selected card(s)? This cannot be undone.`)) {
+        console.log("Action: deleteSelectedCards cancelled by user");
+        return;
+    }
 
     showStatusMessage(`Deleting ${idsToDelete.length} card(s)...`, 'info', 5000);
     let successCount = 0;
@@ -351,8 +369,12 @@ async function deleteSelectedCards() {
 
 // Delete All Cards (via API - requires backend endpoint)
 async function deleteAllCards() {
+    console.log("Action: deleteAllCards triggered");
     if (flashcardsData.length === 0) { alert("No cards to delete."); return; }
-    if (!confirm(`Delete ALL ${flashcardsData.length} cards? This cannot be undone.`)) return;
+    if (!confirm(`Delete ALL ${flashcardsData.length} cards? This cannot be undone.`)) {
+        console.log("Action: deleteAllCards cancelled by user");
+        return;
+    }
 
     showStatusMessage("Deleting all cards...", 'info', 5000);
     try {
@@ -375,6 +397,7 @@ async function deleteAllCards() {
 
 // --- Edit Modal Logic ---
 function openEditModal() {
+    console.log("Action: openEditModal triggered");
     if (currentCardIndex === -1 || !flashcardsData[currentCardIndex]) {
          showStatusMessage("No card selected.", 'info'); return;
     }
@@ -387,10 +410,14 @@ function openEditModal() {
     editCardIndexInput.value = card.id; // Store the card's unique ID
     editModal.style.display = "block";
 }
-function closeEditModal() { if (editModal) editModal.style.display = "none"; }
+function closeEditModal() {
+    console.log("Action: closeEditModal triggered");
+    if (editModal) editModal.style.display = "none";
+}
 
 // Save Edit from Modal (via API)
 async function saveEdit() {
+    console.log("Action: saveEdit triggered");
      if (!editModal || !editQuestionInput || !editAnswerInput || !editCardIndexInput) {
         console.error("Edit modal elements not found!"); alert("Error saving changes."); return;
     }
@@ -434,10 +461,33 @@ async function saveEdit() {
 }
 
 // --- Shuffle, Reset, Clear Form ---
-function shuffleCards() { /* ... keep existing ... */ }
+// Basic shuffle implementation (Fisher-Yates)
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
+
+function shuffleCards() {
+    console.log("Action: shuffleCards triggered");
+    if (filteredIndices.length < 2) {
+        showStatusMessage("Need at least 2 cards in view to shuffle.", 'info');
+        return;
+    }
+    shuffleArray(filteredIndices); // Shuffle the array of indices
+    currentFilteredIndex = 0; // Reset to the start of the shuffled view
+    displayCard();
+    showStatusMessage("Cards shuffled.", 'info');
+}
+
 // Reset now just reloads data from backend, doesn't clear localStorage for cards
 function resetData() {
-    if (!confirm("Reset view and reload all cards from server? Unsaved changes will be lost.")) return;
+    console.log("Action: resetData triggered");
+    if (!confirm("Reset view and reload all cards from server? Unsaved changes will be lost.")) {
+        console.log("Action: resetData cancelled by user");
+        return;
+    }
     // Clear local UI state, keep theme
     searchTerm = '';
     showAnswerFirst = false;
@@ -447,17 +497,41 @@ function resetData() {
     loadData(); // This will re-fetch and call applyFiltersAndSearch
     showStatusMessage("Reloaded cards from server.", 'info', 3000);
 }
-function clearFormFields(showMessage = true) { /* ... keep existing ... */ }
+function clearFormFields(showMessage = true) {
+    console.log("Action: clearFormFields triggered");
+    if (questionInput) questionInput.value = '';
+    if (answerInput) answerInput.value = '';
+    if (showMessage) showStatusMessage("Form cleared.", 'info', 1500);
+}
 
 // --- Status Message ---
-function showStatusMessage(message, type = 'info', duration = 3000) { /* ... keep existing ... */ }
-function clearStatusMessage() { /* ... keep existing ... */ }
+function showStatusMessage(message, type = 'info', duration = 3000) {
+    if (!statusMessageEl) return;
+    statusMessageEl.textContent = message;
+    statusMessageEl.className = `status-message status-${type}`; // Apply type class
+    statusMessageEl.style.display = 'block';
+    clearTimeout(statusTimeout);
+    if (duration > 0) {
+        statusTimeout = setTimeout(clearStatusMessage, duration);
+    }
+}
+function clearStatusMessage() {
+    if (statusMessageEl) statusMessageEl.style.display = 'none';
+}
 
 // --- Import Modal Logic (Needs update for backend) ---
-function openImportModal() { /* ... keep existing ... */ }
-function closeImportModal() { /* ... keep existing ... */ }
+function openImportModal() {
+    console.log("Action: openImportModal triggered");
+    if (importModal) importModal.style.display = "block";
+    if (jsonInput) jsonInput.value = ''; // Clear previous input
+}
+function closeImportModal() {
+    console.log("Action: closeImportModal triggered");
+    if (importModal) importModal.style.display = "none";
+}
 // Import needs to POST new cards to backend, potentially in batches
 async function importFromJson() {
+    console.log("Action: importFromJson triggered");
     if (!jsonInput) { alert("Error: Cannot find JSON input area."); return; }
     const jsonString = jsonInput.value.trim();
     if (!jsonString) { alert("Import Error: Please paste JSON data."); return; }
@@ -518,18 +592,68 @@ async function importFromJson() {
 }
 
 // --- Theme Functions ---
-function toggleTheme() { /* ... keep existing ... */ }
-function applyTheme() { /* ... keep existing ... */ }
-function loadTheme() { /* ... keep existing ... */ }
+function toggleTheme() {
+    console.log("Action: toggleTheme triggered");
+    currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+    localStorage.setItem('flashcardTheme', currentTheme);
+    applyTheme();
+}
+function applyTheme() {
+    document.body.className = currentTheme === 'dark' ? 'dark-theme' : '';
+    if (themeIcon) {
+        themeIcon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+    }
+}
+function loadTheme() {
+    console.log("Action: loadTheme triggered");
+    const savedTheme = localStorage.getItem('flashcardTheme');
+    if (savedTheme) {
+        currentTheme = savedTheme;
+    }
+    applyTheme();
+}
 
 // --- Filter/Search Handlers ---
 function handleFilterChange() { /* No longer needed */ }
-function handleSearchInput() { /* ... keep existing ... */ }
+function handleSearchInput() {
+    console.log("Action: handleSearchInput triggered");
+    if (!searchInput) return;
+    searchTerm = searchInput.value;
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        applyFiltersAndSearch();
+    }, 300); // Debounce search
+}
 
 // --- Other Handlers ---
-function exportToJson() { /* ... keep existing ... */ }
-function handleShowAnswerFirstToggle() { /* ... keep existing ... */ }
-function updateProgressBar(currentNum, totalNum) { /* ... keep existing ... */ }
+function exportToJson() {
+    console.log("Action: exportToJson triggered");
+    if (flashcardsData.length === 0) {
+        showStatusMessage("No cards to export.", 'info');
+        return;
+    }
+    // Export only question and answer, remove internal ID
+    const exportData = flashcardsData.map(({ question, answer }) => ({ question, answer }));
+    const dataStr = JSON.stringify(exportData, null, 2); // Pretty print JSON
+    const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    const exportFileDefaultName = 'flashcards_export.json';
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    showStatusMessage("Exported cards to JSON.", 'info');
+}
+function handleShowAnswerFirstToggle() {
+    console.log("Action: handleShowAnswerFirstToggle triggered");
+    if (!showAnswerFirstToggle) return;
+    showAnswerFirst = showAnswerFirstToggle.checked;
+    displayCard(); // Re-display the current card with the new setting
+}
+function updateProgressBar(currentNum, totalNum) {
+    if (!progressBar) return;
+    const percentage = totalNum > 0 ? (currentNum / totalNum) * 100 : 0;
+    progressBar.style.width = `${percentage}%`;
+}
 
 
 // --- Navigation Button State Update ---
@@ -557,6 +681,7 @@ function handleKeyPress(event) {
 
     if (modalIsOpen || typingInInput) {
         if (event.key === 'Escape') {
+            console.log("Action: handleKeyPress - Escape in modal/input");
             if (importModal && importModal.style.display === 'block') closeImportModal();
             if (editModal && editModal.style.display === 'block') closeEditModal();
             if (deleteOptionsModal && deleteOptionsModal.style.display === 'block') closeDeleteOptionsModal();
@@ -564,6 +689,7 @@ function handleKeyPress(event) {
         return;
     }
 
+    console.log(`Action: handleKeyPress - Key: ${event.key}`);
     switch (event.key) {
         case 'ArrowLeft': if (prevBtn && !prevBtn.disabled) prevCard(); break;
         case 'ArrowRight': if (nextBtn && !nextBtn.disabled) nextCard(); break;
