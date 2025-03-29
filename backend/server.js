@@ -8,8 +8,14 @@ const { Pool } = require('pg');
 const app = express();
 
 // --- Middleware ---
-// Enable CORS - Restrict to deployed frontend URL
-app.use(cors({ origin: 'https://flashcardsgrune.netlify.app' }));
+// Enable CORS - Restrict to deployed frontend URL and explicitly handle preflight
+app.use(cors({
+    origin: 'https://flashcardsgrune.netlify.app',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Explicitly allow methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allow common headers
+    preflightContinue: false, // Let CORS middleware handle OPTIONS
+    optionsSuccessStatus: 204 // Standard success for preflight
+}));
 // Parse JSON request bodies
 app.use(express.json());
 
