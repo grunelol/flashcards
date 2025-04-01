@@ -62,7 +62,8 @@ let flashcardsData = []; // Holds ALL card objects { id, question, answer } from
 let currentCardIndex = -1; // Index in the *original* flashcardsData array. -1 means none selected.
 let isFlipped = false;
 let statusTimeout;
-let currentTheme = 'light';
+let currentTheme = 'light'; // Tracks the *actually applied* theme ('light' or 'dark')
+const THEME_PREFERENCE_KEY = 'flashcardThemePreference'; // localStorage key
 let currentFilter = 'all'; // Only 'all' is used now
 let searchTerm = '';
 let showAnswerFirst = false;
@@ -622,25 +623,60 @@ async function importFromJson() {
 }
 
 // --- Theme Functions ---
+
+// Applies the theme ('light' or 'dark') to the body and updates the icon
+function applyTheme() {
+    console.log(`Applying theme: ${currentTheme}`);
+    if (currentTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+    // Update the main toggle button icon based on the *applied* theme
+    if (themeIcon) {
+        themeIcon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon'; // Sun in dark mode, Moon in light mode
+    }
+    // Optional: Update title attribute for clarity
+    if (themeToggleBtn) {
+        themeToggleBtn.title = `Toggle to ${currentTheme === 'dark' ? 'Light' : 'Dark'} Mode`;
+    }
+}
+
+// Determines the actual theme based on preference ('light', 'dark', 'system') and applies it
+function setTheme(preference) {
+    console.log(`Setting theme preference to: ${preference}`);
+    localStorage.setItem(THEME_PREFERENCE_KEY, preference);
+
+    let actualTheme = preference;
+    if (preference === 'system') {
+        actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        console.log(`System preference detected: ${actualTheme}`);
+    }
+
+    // Ensure actualTheme is only 'light' or 'dark'
+    if (actualTheme !== 'light' && actualTheme !== 'dark') {
+        console.warn(`Invalid theme resolved: ${actualTheme}, defaulting to light.`);
+        actualTheme = 'light'; // Fallback
+    }
+
+    currentTheme = actualTheme; // Update the global state for the applied theme
+    applyTheme();
+}
+
+// Called when the main toggle button is clicked
 function toggleTheme() {
     console.log("Action: toggleTheme triggered");
-    currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-    localStorage.setItem('flashcardTheme', currentTheme);
-    applyTheme();
+    // Cycle between light and dark, and save that as the new preference
+    const nextThemePreference = currentTheme === 'light' ? 'dark' : 'light';
+    setTheme(nextThemePreference);
 }
-function applyTheme() {
-    document.body.className = currentTheme === 'dark' ? 'dark-theme' : '';
-    if (themeIcon) {
-        themeIcon.className = currentTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-    }
-}
+
+// Called on initial page load
 function loadTheme() {
     console.log("Action: loadTheme triggered");
-    const savedTheme = localStorage.getItem('flashcardTheme');
-    if (savedTheme) {
-        currentTheme = savedTheme;
-    }
-    applyTheme();
+    const savedPreference = localStorage.getItem(THEME_PREFERENCE_KEY);
+    // If no preference saved, default to 'system'
+    setTheme(savedPreference || 'system');
 }
 
 // --- Filter/Search Handlers ---
@@ -778,7 +814,22 @@ function initializeApp() {
     if (importJsonBtn) importJsonBtn.addEventListener('click', openImportModal); else console.error("CRITICAL: importJsonBtn not found!");
     if (exportJsonBtn) exportJsonBtn.addEventListener('click', exportToJson);
     // Theme & View Options
+    // Theme Toggle Button (Cycles light/dark and sets preference)
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
+
+    // Theme Dropdown Buttons (Sets specific preference)
+    const themeDropdown = document.getElementById('themeDropdown');
+    if (themeDropdown) {
+        const themePrefButtons = themeDropdown.querySelectorAll('button[data-theme-preference]');
+        themePrefButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const preference = button.dataset.themePreference;
+                if (preference) {
+                    setTheme(preference);
+                }
+            });
+        });
+    }
     // if (filterStatusSelect) filterStatusSelect.addEventListener('change', handleFilterChange); // No longer needed
     if (searchInput) searchInput.addEventListener('input', handleSearchInput);
     if (showAnswerFirstToggle) showAnswerFirstToggle.addEventListener('change', handleShowAnswerFirstToggle);
@@ -817,7 +868,20 @@ function initializeApp() {
     document.addEventListener('keydown', handleKeyPress);
 
     // Initial Load Actions
-    loadTheme(); // Load theme first (uses localStorage)
+    loadTheme(); // Load saved theme preference or detect system setting
+
+    // Add listener for system theme changes
+    const systemThemeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
+    systemThemeMatcher.addEventListener('change', () => {
+        console.log("System theme changed detected");
+        const savedPreference = localStorage.getItem(THEME_PREFERENCE_KEY);
+        if (savedPreference === 'system') {
+            console.log("Preference is 'system', re-applying theme based on new system setting.");
+            setTheme('system'); // Re-evaluate system theme
+        } else {
+            console.log(`Preference is '${savedPreference}', ignoring system change.`);
+        }
+    });
     loadData(); // Load card data from backend
     console.log("App initialization complete.");
 }

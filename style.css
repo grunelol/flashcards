@@ -561,3 +561,84 @@ body.dark-mode #exportJsonBtn { color: #fff; }
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* --- Theme Selector Dropdown --- */
+.theme-selector-container {
+    position: relative; /* Establish positioning context for the dropdown */
+    display: inline-block; /* Or flex, depending on layout needs */
+}
+
+.theme-dropdown {
+    display: none; /* Hidden by default */
+    position: absolute;
+    top: 100%; /* Position below the button */
+    right: 0; /* Align to the right edge of the button */
+    background-color: var(--container-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px var(--shadow-color);
+    padding: 5px 0; /* Padding top/bottom */
+    min-width: 120px; /* Minimum width */
+    z-index: 10; /* Ensure it's above nearby elements */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(5px); /* Start slightly lower */
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+}
+
+.theme-selector-container:hover .theme-dropdown {
+    display: block; /* Show on hover */
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.theme-dropdown button {
+    display: flex; /* Align icon and text */
+    align-items: center;
+    gap: 8px; /* Space between icon and text */
+    background: none;
+    border: none;
+    color: var(--text-color);
+    padding: 8px 15px;
+    text-align: left;
+    width: 100%;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: normal; /* Override default button bold */
+    box-shadow: none; /* Override default button shadow */
+    border-radius: 0; /* Remove individual button radius */
+}
+
+.theme-dropdown button:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: none; /* Override default button hover transform */
+    box-shadow: none; /* Override default button hover shadow */
+}
+
+.theme-dropdown button i {
+    width: 16px; /* Fixed width for icons */
+    text-align: center;
+    color: var(--text-muted-color); /* Subtle icon color */
+}
+
+.theme-dropdown button:hover i {
+    color: white; /* Icon color on hover */
+}
+
+/* Optional: Add a small triangle indicator above the dropdown */
+.theme-dropdown::before {
+    content: '';
+    position: absolute;
+    bottom: 100%; /* Position above the dropdown */
+    right: 15px; /* Align roughly with the button icon */
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent var(--border-color) transparent;
+}
+.theme-selector-container:hover .theme-dropdown::before {
+     border-color: transparent transparent var(--container-bg) transparent; /* Match background when open */
+     /* Add a subtle border to the triangle itself */
+     filter: drop-shadow(0 -1px 0px var(--border-color));
+}
