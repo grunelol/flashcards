@@ -770,6 +770,8 @@ function initializeApp() {
     if (deleteOptionsBtn) deleteOptionsBtn.addEventListener('click', openDeleteOptionsModal);
     if (shuffleBtn) shuffleBtn.addEventListener('click', shuffleCards);
     if (resetBtn) resetBtn.addEventListener('click', resetData); // Reset now reloads from backend
+    const reconnectBtn = document.getElementById('reconnectBtn');
+    if (reconnectBtn) reconnectBtn.addEventListener('click', loadData); // Add listener for reconnect
     // Add/Import/Export
     if (addCardBtn) addCardBtn.addEventListener('click', addCard);
     if (clearFormBtn) clearFormBtn.addEventListener('click', () => clearFormFields(true));
