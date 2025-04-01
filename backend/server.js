@@ -5,6 +5,12 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const morgan = require('morgan'); // Require morgan
+const createDOMPurify = require('dompurify');
+const { JSDOM } = require('jsdom');
+
+// Setup DOMPurify
+const window = new JSDOM('').window;
+const DOMPurify = createDOMPurify(window);
 
 const app = express();
 
@@ -74,14 +80,19 @@ app.get('/cards', async (req, res, next) => {
 
 // POST /cards - Add a new flashcard
 app.post('/cards', async (req, res, next) => {
-  const { question, answer } = req.body;
+  let { question, answer } = req.body; // Use let
   if (!question || !answer) {
     return res.status(400).json({ error: 'Question and answer are required.' });
   }
+
+  // Sanitize input
+  const cleanQuestion = DOMPurify.sanitize(question);
+  const cleanAnswer = DOMPurify.sanitize(answer);
+
   try {
     const result = await pool.query(
       'INSERT INTO cards (question, answer) VALUES ($1, $2) RETURNING id, question, answer',
-      [question, answer]
+      [cleanQuestion, cleanAnswer] // Use sanitized values
     );
     res.status(201).json(result.rows[0]); // Return the newly created card
   } catch (err) {
@@ -93,17 +104,22 @@ app.post('/cards', async (req, res, next) => {
 // PUT /cards/:id - Update an existing flashcard
 app.put('/cards/:id', async (req, res, next) => {
   const { id } = req.params;
-  const { question, answer } = req.body;
+  let { question, answer } = req.body; // Use let
   if (!question || !answer) {
     return res.status(400).json({ error: 'Question and answer are required.' });
   }
   if (isNaN(parseInt(id))) {
       return res.status(400).json({ error: 'Invalid card ID.' });
   }
+
+  // Sanitize input
+  const cleanQuestion = DOMPurify.sanitize(question);
+  const cleanAnswer = DOMPurify.sanitize(answer);
+
   try {
     const result = await pool.query(
       'UPDATE cards SET question = $1, answer = $2 WHERE id = $3 RETURNING id, question, answer',
-      [question, answer, parseInt(id)]
+      [cleanQuestion, cleanAnswer, parseInt(id)] // Use sanitized values
     );
     if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Card not found.' });
@@ -177,9 +193,12 @@ app.post('/cards/bulk', async (req, res, next) => {
     // a single INSERT with multiple VALUES) might be better.
     // However, this is simpler and safer for moderate numbers.
     for (const card of cards) {
+      // Sanitize each card's content before inserting
+      const cleanQuestion = DOMPurify.sanitize(card.question);
+      const cleanAnswer = DOMPurify.sanitize(card.answer);
       await client.query(
         'INSERT INTO cards (question, answer) VALUES ($1, $2)',
-        [card.question, card.answer]
+        [cleanQuestion, cleanAnswer] // Use sanitized values
       );
       importedCount++;
     }

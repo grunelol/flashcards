@@ -311,14 +311,25 @@ function openDeleteOptionsModal() {
     if (flashcardsData.length === 0) {
         deleteCardList.innerHTML = '<p>No cards in the deck.</p>';
     } else {
-        // Use card ID as value
+        // Use card ID as value and build elements safely
         flashcardsData.forEach((card) => {
             const item = document.createElement('div');
             item.className = 'delete-card-item';
-            item.innerHTML = `
-                <input type="checkbox" value="${card.id}" id="del-chk-${card.id}">
-                <label for="del-chk-${card.id}"><span>${card.question}</span></label>
-            `;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = card.id;
+            checkbox.id = `del-chk-${card.id}`;
+
+            const label = document.createElement('label');
+            label.htmlFor = checkbox.id; // Use htmlFor for accessibility
+
+            const span = document.createElement('span');
+            span.textContent = card.question; // Safely set text content
+
+            label.appendChild(span);
+            item.appendChild(checkbox);
+            item.appendChild(label);
             deleteCardList.appendChild(item);
         });
     }
