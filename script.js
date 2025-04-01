@@ -71,6 +71,7 @@ let showAnswerFirst = false;
 let filteredIndices = []; // Array of indices from flashcardsData matching current filter/search
 let currentFilteredIndex = 0; // Index within filteredIndices array
 let searchTimeout;
+const MANAGE_DECK_COLLAPSED_KEY = 'manageDeckCollapsed'; // localStorage key
 
 // --- Core Functions ---
 
@@ -916,6 +917,45 @@ function initializeApp() {
 
     // Keyboard navigation listener
     document.addEventListener('keydown', handleKeyPress);
+
+    // Collapsible Section Listener
+    const manageDeckToggle = document.getElementById('manageDeckToggle');
+    const manageDeckContent = document.getElementById('manageDeckContent');
+    const manageDeckIcon = manageDeckToggle ? manageDeckToggle.querySelector('.toggle-icon') : null;
+
+    if (manageDeckToggle && manageDeckContent && manageDeckIcon) {
+        // Load saved state
+        const isCollapsed = localStorage.getItem(MANAGE_DECK_COLLAPSED_KEY) === 'true';
+        if (isCollapsed) {
+            manageDeckContent.style.maxHeight = '0px';
+            manageDeckContent.style.opacity = '0';
+            manageDeckToggle.classList.add('collapsed');
+            manageDeckIcon.classList.replace('fa-chevron-down', 'fa-chevron-right');
+        } else {
+            // Set initial maxHeight based on content if not collapsed
+            manageDeckContent.style.maxHeight = manageDeckContent.scrollHeight + "px";
+            manageDeckIcon.classList.replace('fa-chevron-right', 'fa-chevron-down');
+        }
+
+        manageDeckToggle.addEventListener('click', () => {
+            const currentlyCollapsed = manageDeckToggle.classList.contains('collapsed');
+            if (currentlyCollapsed) {
+                // Expand
+                manageDeckContent.style.maxHeight = manageDeckContent.scrollHeight + "px";
+                manageDeckContent.style.opacity = '1';
+                manageDeckIcon.classList.replace('fa-chevron-right', 'fa-chevron-down');
+                manageDeckToggle.classList.remove('collapsed');
+                localStorage.setItem(MANAGE_DECK_COLLAPSED_KEY, 'false');
+            } else {
+                // Collapse
+                manageDeckContent.style.maxHeight = '0px';
+                manageDeckContent.style.opacity = '0';
+                manageDeckIcon.classList.replace('fa-chevron-down', 'fa-chevron-right');
+                manageDeckToggle.classList.add('collapsed');
+                localStorage.setItem(MANAGE_DECK_COLLAPSED_KEY, 'true');
+            }
+        });
+    }
 
     // Initial Load Actions
     loadTheme(); // Load saved theme preference or detect system setting

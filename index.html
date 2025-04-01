@@ -94,16 +94,21 @@
             </div>
         </div>
 
-        <div class="controls-area">
-             <h2>Manage Deck</h2>
-             <div class="control-buttons">
-                <button id="shuffleBtn">Shuffle View</button>
-                <button id="importJsonBtn">Import JSON</button>
-                <button id="exportJsonBtn">Export JSON</button>
-                <button id="deleteOptionsBtn" class="btn-warning">Delete Options...</button> <!-- Renamed -->
-                <!-- Removed Delete Current and Delete Filtered -->
-                <button id="resetBtn" class="btn-danger">Reset Deck</button>
-                <button id="reconnectBtn" class="btn-secondary" title="Reload cards from database"><i class="fas fa-sync-alt"></i> Reconnect</button>
+        <div class="controls-area collapsible-section"> <!-- Add class for styling -->
+             <h2 id="manageDeckToggle" class="collapsible-toggle"> <!-- Add ID and class -->
+                 <span>Manage Deck</span>
+                 <i class="fas fa-chevron-down toggle-icon"></i> <!-- Add icon -->
+             </h2>
+             <div id="manageDeckContent" class="collapsible-content"> <!-- Wrap content -->
+                 <div class="control-buttons">
+                    <button id="shuffleBtn">Shuffle View</button>
+                    <button id="importJsonBtn">Import JSON</button>
+                    <button id="exportJsonBtn">Export JSON</button>
+                    <button id="deleteOptionsBtn" class="btn-warning">Delete Options...</button> <!-- Renamed -->
+                    <!-- Removed Delete Current and Delete Filtered -->
+                    <button id="resetBtn" class="btn-danger">Reset Deck</button>
+                    <button id="reconnectBtn" class="btn-secondary" title="Reload cards from database"><i class="fas fa-sync-alt"></i> Reconnect</button>
+                 </div>
              </div>
         </div>
 
