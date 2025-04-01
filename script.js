@@ -184,6 +184,7 @@ function nextCard() {
     console.log("Action: nextCard triggered");
     if (currentFilteredIndex < filteredIndices.length - 1) {
         currentFilteredIndex++;
+        currentCardIndex = filteredIndices[currentFilteredIndex]; // Update original index
         displayCard();
     }
 }
@@ -193,6 +194,7 @@ function prevCard() {
     console.log("Action: prevCard triggered");
     if (currentFilteredIndex > 0) {
         currentFilteredIndex--;
+        currentCardIndex = filteredIndices[currentFilteredIndex]; // Update original index
         displayCard();
     }
 }
@@ -205,6 +207,7 @@ function randomCard() {
         do { randomIndex = Math.floor(Math.random() * filteredIndices.length); }
         while (randomIndex === currentFilteredIndex);
         currentFilteredIndex = randomIndex;
+        currentCardIndex = filteredIndices[currentFilteredIndex]; // Update original index
         displayCard();
     } else if (filteredIndices.length === 1) { showStatusMessage("Only one card in view.", 'info', 1500); }
     else { showStatusMessage("No cards available.", 'info', 1500); }
