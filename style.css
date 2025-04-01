@@ -784,3 +784,65 @@ body.palette-rainbow.dark-mode {
     /* Styles inherited from .theme-dropdown::before */
     /* Adjust 'right' property if alignment is off */
 }
+
+/* --- Collapsible Section --- */
+.collapsible-toggle {
+    display: flex;
+    justify-content: space-between; /* Push icon to the right */
+    align-items: center;
+    cursor: pointer;
+    user-select: none; /* Prevent text selection on click */
+    border-bottom: 1px solid var(--border-color); /* Keep the heading line */
+    padding-bottom: 10px; /* Keep padding */
+    margin-bottom: 0; /* Remove bottom margin, content div will handle spacing */
+    transition: background-color 0.2s ease; /* Subtle hover */
+}
+
+.collapsible-toggle:hover {
+    background-color: rgba(128, 128, 128, 0.05); /* Very subtle hover */
+}
+body.dark-mode .collapsible-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.collapsible-toggle .toggle-icon {
+    transition: transform 0.3s ease;
+    font-size: 0.8em; /* Make icon slightly smaller */
+    margin-left: 10px; /* Space between text and icon */
+}
+
+.collapsible-toggle.collapsed .toggle-icon {
+    transform: rotate(-90deg); /* Rotate icon when collapsed */
+}
+
+.collapsible-content {
+    overflow: hidden;
+    max-height: 500px; /* Set a large max-height for expanded state (adjust if needed) */
+    opacity: 1;
+    transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding-top 0.4s ease-out, padding-bottom 0.4s ease-out;
+    padding-top: 20px; /* Add padding when expanded */
+    padding-bottom: 0; /* Remove bottom padding when expanded (margin on buttons handles it) */
+    box-sizing: border-box;
+}
+
+.collapsible-toggle.collapsed + .collapsible-content {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    /* Ensure margin/padding from internal elements doesn't cause overflow */
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+/* Adjust margin for the section below the collapsible one if needed */
+.add-card-area {
+    margin-top: 40px; /* Restore top margin */
+}
+
+.palette-selector-container:hover .palette-dropdown {
+    display: block; /* Show on hover */
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
