@@ -642,3 +642,145 @@ body.dark-mode #exportJsonBtn { color: #fff; }
      /* Add a subtle border to the triangle itself */
      filter: drop-shadow(0 -1px 0px var(--border-color));
 }
+
+/* --- Color Palette Definitions --- */
+
+/* Warm Palette - Light Mode */
+body.palette-warm {
+    --bg-color: #fdf6e3;
+    --container-bg: #eee8d5;
+    --primary-color: #cb4b16; /* Orange */
+    --primary-hover: #dc322f; /* Red */
+    --secondary-color: #93a1a1;
+    --secondary-hover: #839496;
+    --card-back-bg: #fdf6e3;
+    --text-color: #586e75;
+    --text-muted-color: #839496;
+    --border-color: #eee8d5;
+    --shadow-color: rgba(88, 110, 117, 0.1);
+    --success-color: #859900; /* Green */
+    --error-color: #dc322f; /* Red */
+    --info-color: #268bd2; /* Blue */
+    --warning-color: #b58900; /* Yellow */
+    --progress-bg: #eee8d5;
+    --input-bg: #fdf6e3;
+    --input-border: #93a1a1;
+    --input-focus-border: var(--primary-color);
+    --input-focus-shadow: rgba(203, 75, 22, 0.2);
+}
+
+/* Warm Palette - Dark Mode */
+body.palette-warm.dark-mode {
+    --bg-color: #002b36;
+    --container-bg: #073642;
+    --primary-color: #b58900; /* Yellow */
+    --primary-hover: #cb4b16; /* Orange */
+    --secondary-color: #839496;
+    --secondary-hover: #93a1a1;
+    --card-back-bg: #002b36;
+    --text-color: #93a1a1;
+    --text-muted-color: #657b83;
+    --border-color: #073642;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --success-color: #859900; /* Green */
+    --error-color: #dc322f; /* Red */
+    --info-color: #268bd2; /* Blue */
+    --warning-color: #cb4b16; /* Orange */
+    --progress-bg: #073642;
+    --input-bg: #002b36;
+    --input-border: #586e75;
+    --input-focus-border: var(--primary-color);
+    --input-focus-shadow: rgba(181, 137, 0, 0.2);
+}
+
+/* Rainbow Palette - Light Mode (Soft Pastels) */
+body.palette-rainbow {
+    --bg-color: #f0f8ff; /* Alice Blue */
+    --container-bg: #ffffff;
+    --primary-color: #ffb3ba; /* Pastel Red/Pink */
+    --primary-hover: #ff9a8b; /* Darker Pastel Red/Pink */
+    --secondary-color: #baffc9; /* Pastel Green */
+    --secondary-hover: #a3f7b7; /* Darker Pastel Green */
+    --card-back-bg: #bae1ff; /* Pastel Blue */
+    --text-color: #5f5f5f; /* Dark Gray */
+    --text-muted-color: #8f8f8f; /* Medium Gray */
+    --border-color: #e0e0e0; /* Light Gray */
+    --shadow-color: rgba(0, 0, 0, 0.04);
+    --success-color: #baffc9;
+    --error-color: #ffb3ba;
+    --info-color: #bae1ff;
+    --warning-color: #ffffba; /* Pastel Yellow */
+    --progress-bg: #e0e0e0;
+    --input-bg: #ffffff;
+    --input-border: #dcdcdc;
+    --input-focus-border: var(--primary-color);
+    --input-focus-shadow: rgba(255, 179, 186, 0.2);
+}
+
+/* Rainbow Palette - Dark Mode (Saturated Pastels) */
+body.palette-rainbow.dark-mode {
+    --bg-color: #2a2a3e; /* Dark Purple/Blue */
+    --container-bg: #3a3a5e;
+    --primary-color: #ff9a8b; /* Pastel Coral */
+    --primary-hover: #ffb3ba; /* Lighter Coral */
+    --secondary-color: #8fd9a8; /* Pastel Mint */
+    --secondary-hover: #b3e6c3; /* Lighter Mint */
+    --card-back-bg: #8ecae6; /* Pastel Sky Blue */
+    --text-color: #e0e0e0; /* Light Gray */
+    --text-muted-color: #b0b0b0; /* Medium Gray */
+    --border-color: #4a4a6e;
+    --shadow-color: rgba(0, 0, 0, 0.25);
+    --success-color: #8fd9a8;
+    --error-color: #ff9a8b;
+    --info-color: #8ecae6;
+    --warning-color: #fff1a8; /* Pastel Lemon */
+    --progress-bg: #4a4a6e;
+    --input-bg: #3a3a5e;
+    --input-border: #5a5a7e;
+    --input-focus-border: var(--primary-color);
+    --input-focus-shadow: rgba(255, 154, 139, 0.2);
+}
+
+/* --- Header Adjustments for Palette Selector --- */
+.app-header {
+    align-items: center; /* Ensure vertical alignment */
+    gap: 10px; /* Add gap between title and selectors */
+}
+
+.app-header h1 {
+    flex-grow: 1; /* Allow title to take available space */
+}
+
+.theme-selector-container,
+.palette-selector-container {
+    position: relative;
+    display: inline-block;
+}
+
+/* Style for the new palette button */
+#paletteToggleBtn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted-color);
+    font-size: 1.2em;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+}
+#paletteToggleBtn:hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Reuse theme-dropdown styles for palette dropdown */
+.palette-dropdown {
+    /* Styles inherited from .theme-dropdown */
+    min-width: 130px; /* Adjust width if needed */
+}
+
+/* Adjust triangle position for palette dropdown if needed */
+.palette-dropdown::before {
+    /* Styles inherited from .theme-dropdown::before */
+    /* Adjust 'right' property if alignment is off */
+}

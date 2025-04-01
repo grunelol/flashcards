@@ -63,7 +63,8 @@ let currentCardIndex = -1; // Index in the *original* flashcardsData array. -1 m
 let isFlipped = false;
 let statusTimeout;
 let currentTheme = 'light'; // Tracks the *actually applied* theme ('light' or 'dark')
-const THEME_PREFERENCE_KEY = 'flashcardThemePreference'; // localStorage key
+const THEME_PREFERENCE_KEY = 'flashcardThemePreference'; // localStorage key for light/dark/system
+const PALETTE_PREFERENCE_KEY = 'flashcardPalettePreference'; // localStorage key for color palette
 let currentFilter = 'all'; // Only 'all' is used now
 let searchTerm = '';
 let showAnswerFirst = false;
@@ -679,6 +680,40 @@ function loadTheme() {
     setTheme(savedPreference || 'system');
 }
 
+// --- Palette Functions ---
+
+// Applies the chosen palette class to the body
+function applyPalette(preference) {
+    console.log(`Applying palette: ${preference}`);
+    document.body.classList.remove('palette-warm', 'palette-rainbow'); // Remove any existing palette class
+    if (preference === 'warm') {
+        document.body.classList.add('palette-warm');
+    } else if (preference === 'rainbow') {
+        document.body.classList.add('palette-rainbow');
+    }
+    // 'default' requires no extra class
+}
+
+// Sets the palette preference, saves it, and applies the class
+function setPalette(preference) {
+    console.log(`Setting palette preference to: ${preference}`);
+    // Basic validation
+    if (preference !== 'default' && preference !== 'warm' && preference !== 'rainbow') {
+        console.warn(`Invalid palette preference: ${preference}, defaulting to 'default'.`);
+        preference = 'default';
+    }
+    localStorage.setItem(PALETTE_PREFERENCE_KEY, preference);
+    applyPalette(preference);
+}
+
+// Loads the saved palette preference on page load
+function loadPalette() {
+    console.log("Action: loadPalette triggered");
+    const savedPreference = localStorage.getItem(PALETTE_PREFERENCE_KEY);
+    // If no preference saved, default to 'default'
+    setPalette(savedPreference || 'default');
+}
+
 // --- Filter/Search Handlers ---
 function handleFilterChange() { /* No longer needed */ }
 function handleSearchInput() {
@@ -830,6 +865,21 @@ function initializeApp() {
             });
         });
     }
+
+    // Palette Dropdown Buttons (Sets specific preference)
+    const paletteDropdown = document.getElementById('paletteDropdown');
+    if (paletteDropdown) {
+        const palettePrefButtons = paletteDropdown.querySelectorAll('button[data-palette-preference]');
+        palettePrefButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const preference = button.dataset.palettePreference;
+                if (preference) {
+                    setPalette(preference);
+                }
+            });
+        });
+    }
+
     // if (filterStatusSelect) filterStatusSelect.addEventListener('change', handleFilterChange); // No longer needed
     if (searchInput) searchInput.addEventListener('input', handleSearchInput);
     if (showAnswerFirstToggle) showAnswerFirstToggle.addEventListener('change', handleShowAnswerFirstToggle);
@@ -869,6 +919,7 @@ function initializeApp() {
 
     // Initial Load Actions
     loadTheme(); // Load saved theme preference or detect system setting
+    loadPalette(); // Load saved palette preference
 
     // Add listener for system theme changes
     const systemThemeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
