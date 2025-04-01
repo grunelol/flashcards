@@ -28,6 +28,8 @@ const searchInput = document.getElementById('searchInput');
 const showAnswerFirstToggle = document.getElementById('showAnswerFirstToggle');
 const progressBar = document.getElementById('progressBar');
 const progressText = document.getElementById('progressText');
+const loadingIndicator = document.getElementById('loadingIndicator');
+const loadingIndicatorText = loadingIndicator ? loadingIndicator.querySelector('p') : null;
 
 // Modal Elements
 let importModal = null;
@@ -73,7 +75,13 @@ let searchTimeout;
 // Load data from Backend API
 async function loadData() {
     console.log("Action: loadData triggered");
-    showStatusMessage("Loading cards...", 'info', 5000); // Indicate loading
+    // Show loading indicator
+    if (loadingIndicator && loadingIndicatorText) {
+        loadingIndicatorText.textContent = 'Database loading...';
+        loadingIndicator.style.display = 'flex';
+    }
+    // Removed initial showStatusMessage for loading
+
     try {
         const response = await fetch(`${API_BASE_URL}/cards`);
         if (!response.ok) {
@@ -92,9 +100,14 @@ async function loadData() {
         console.error("Error loading cards from backend:", error);
         flashcardsData = []; // Reset to empty on error
         showStatusMessage(`Error loading cards: ${error.message}. Please ensure backend is running.`, 'error', 10000);
+    } finally {
+        // Hide loading indicator regardless of success or error
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
     }
 
-    // Apply initial filters and display
+    // Apply initial filters and display (runs after finally)
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', applyFiltersAndSearch);
     } else {
@@ -720,6 +733,11 @@ function handleKeyPress(event) {
 // --- Initialize Application ---
 function initializeApp() {
     console.log("Initializing app...");
+
+    // Ensure loading indicator is hidden initially
+    if (loadingIndicator) {
+        loadingIndicator.style.display = 'none';
+    }
 
     // Assign Modal Elements
     importModal = document.getElementById('importModal');
