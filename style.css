@@ -10,7 +10,9 @@
     --text-color: #495057;
     --text-muted-color: #6c757d;
     --border-color: #dee2e6;
-    --shadow-color: rgba(0, 0, 0, 0.05);
+    --shadow-color: rgba(0, 0, 0, 0.06); /* Slightly softer shadow */
+    --border-radius-base: 8px; /* Define base radius */
+    --border-radius-large: 12px; /* Larger radius for containers */
     --success-color: #28a745;
     --error-color: #dc3545;
     --info-color: #0dcaf0;
@@ -41,7 +43,7 @@ body.dark-mode {
     --text-color: #f8f9fa;
     --text-muted-color: #adb5bd;
     --border-color: #495057;
-    --shadow-color: rgba(0, 0, 0, 0.2);
+    --shadow-color: rgba(0, 0, 0, 0.25); /* Slightly softer dark shadow */
     --success-color: #198754;
     --error-color: #dc3545;
     --info-color: #0dcaf0;
@@ -77,8 +79,8 @@ body {
 .main-container {
     background-color: var(--container-bg);
     padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px var(--shadow-color);
+    border-radius: var(--border-radius-large); /* Use variable */
+    box-shadow: 0 4px 12px var(--shadow-color); /* Softer shadow */
     width: 100%;
     max-width: 700px; /* Slightly wider for more controls */
     box-sizing: border-box;
@@ -89,8 +91,8 @@ body {
 .auth-container {
     background-color: var(--container-bg);
     padding: 30px 40px; /* More horizontal padding */
-    border-radius: 12px;
-    box-shadow: 0 5px 15px var(--shadow-color);
+    border-radius: var(--border-radius-large); /* Use variable */
+    box-shadow: 0 4px 12px var(--shadow-color); /* Softer shadow */
     width: 100%;
     max-width: 450px; /* Max width for login form */
     box-sizing: border-box;
@@ -125,7 +127,7 @@ body {
     width: 100%;
     padding: 12px 15px; /* Consistent padding */
     border: 1px solid var(--input-border);
-    border-radius: 6px;
+    border-radius: var(--border-radius-base); /* Use variable */
     box-sizing: border-box;
     font-family: var(--font-family);
     font-size: 1em;
@@ -138,7 +140,7 @@ body {
 .auth-container .form-group input[type="password"]:focus {
     outline: none;
     border-color: var(--input-focus-border);
-    box-shadow: 0 0 0 3px var(--input-focus-shadow); /* Slightly larger focus shadow */
+    box-shadow: 0 0 0 3px var(--input-focus-shadow); /* Keep focus shadow */
 }
 
 /* Style for the hint text */
@@ -199,7 +201,7 @@ body {
     color: var(--text-muted-color);
     font-size: 1.2em;
     padding: 5px 10px;
-    border-radius: 6px;
+    border-radius: var(--border-radius-base); /* Use variable */
     cursor: pointer;
     transition: color 0.2s ease, border-color 0.2s ease;
 }
@@ -227,7 +229,7 @@ hr { display: none; }
     text-align: center;
     padding: 10px 15px;
     margin-bottom: 20px;
-    border-radius: 6px;
+    border-radius: var(--border-radius-base); /* Use variable */
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
     font-weight: 600;
@@ -247,8 +249,9 @@ body.dark-mode .status-message.info { color: #fff; } /* Dark mode info text */
     margin-bottom: 25px;
     padding: 15px;
     background-color: rgba(0,0,0,0.02); /* Subtle background */
-    border-radius: 8px;
+    border-radius: var(--border-radius-large); /* Larger radius */
     border: 1px solid var(--border-color);
+    padding: 20px; /* Increase padding slightly */
 }
 body.dark-mode .filter-search-area {
     background-color: rgba(255,255,255,0.05);
@@ -271,7 +274,7 @@ body.dark-mode .filter-search-area {
 .filter-search-area input[type="text"] {
     padding: 8px 12px;
     border: 1px solid var(--input-border);
-    border-radius: 6px;
+    border-radius: var(--border-radius-base); /* Use variable */
     background-color: var(--input-bg);
     color: var(--text-color);
     font-size: 0.95em;
@@ -282,7 +285,7 @@ body.dark-mode .filter-search-area {
 .filter-search-area input[type="text"]:focus {
     outline: none;
     border-color: var(--input-focus-border);
-    box-shadow: 0 0 0 2px var(--input-focus-shadow);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow); /* Consistent focus shadow */
 }
 
 .view-mode-group input[type="checkbox"] {
@@ -296,16 +299,16 @@ body.dark-mode .filter-search-area {
 .progress-container {
     width: 100%;
     background-color: var(--progress-bg);
-    border-radius: 4px;
+    border-radius: var(--border-radius-base); /* Rounded container */
     overflow: hidden;
-    height: 8px; /* Slimmer progress bar */
+    height: 10px; /* Slightly thicker */
     margin-bottom: 5px; /* Space before text */
 }
 .progress-bar {
     height: 100%;
     width: 0%; /* Initial width */
     background-color: var(--progress-bar-color);
-    border-radius: 4px;
+    border-radius: var(--border-radius-base); /* Rounded inner bar */
     transition: width 0.3s ease-out;
 }
 .progress-text {
@@ -353,9 +356,9 @@ body.dark-mode .filter-search-area {
     align-items: center;
     padding: 25px;
     box-sizing: border-box;
-    border-radius: 10px;
+    border-radius: var(--border-radius-large); /* Use variable */
     border: 1px solid var(--border-color);
-    box-shadow: 0 4px 8px var(--shadow-color);
+    box-shadow: 0 3px 10px var(--shadow-color); /* Softer shadow */
     font-size: 1.1em;
     text-align: center;
     transition: background-color 0.3s ease, border-color 0.3s ease; /* Theme transition */
@@ -386,13 +389,13 @@ button {
     padding: 10px 18px; /* Adjusted padding */
     cursor: pointer;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--border-radius-base); /* Use variable */
     background-color: var(--primary-color);
     color: white;
     font-size: 0.95em; /* Slightly smaller base */
     font-weight: 600;
     transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px var(--shadow-color); /* Use variable, slightly softer */
 }
 body.dark-mode button {
      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -401,7 +404,7 @@ body.dark-mode button {
 button:hover {
     background-color: var(--primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 10px var(--shadow-color); /* Use variable, slightly softer */
 }
 body.dark-mode button:hover {
      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
@@ -409,7 +412,7 @@ body.dark-mode button:hover {
 
 button:active {
      transform: translateY(0px);
-     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+     box-shadow: 0 1px 3px var(--shadow-color); /* Use variable, slightly softer */
 }
 
 button:disabled {
@@ -447,7 +450,7 @@ body.dark-mode #exportJsonBtn { color: #fff; }
     width: 100%;
     padding: 12px;
     border: 1px solid var(--input-border);
-    border-radius: 6px;
+    border-radius: var(--border-radius-base); /* Use variable */
     box-sizing: border-box;
     resize: vertical;
     font-family: var(--font-family);
@@ -459,7 +462,7 @@ body.dark-mode #exportJsonBtn { color: #fff; }
 .form-group textarea:focus {
     outline: none;
     border-color: var(--input-focus-border);
-    box-shadow: 0 0 0 2px var(--input-focus-shadow);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow); /* Consistent focus shadow */
 }
 
 /* --- Modal Styles --- */
@@ -483,10 +486,10 @@ body.dark-mode #exportJsonBtn { color: #fff; }
     margin: 5% auto;
     padding: 30px;
     border: 1px solid var(--border-color); /* Use theme variable */
-    border-radius: 10px;
+    border-radius: var(--border-radius-large); /* Use variable */
     width: 80%;
     max-width: 700px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    box-shadow: 0 5px 20px var(--shadow-color); /* Softer shadow */
     position: relative;
     animation-name: slideIn;
     animation-duration: 0.3s;
@@ -515,6 +518,7 @@ body.dark-mode #exportJsonBtn { color: #fff; }
     padding: 10px;
     border-radius: 4px;
     border: 1px solid var(--border-color); /* Theme variable */
+    border-radius: var(--border-radius-base); /* Rounded corners */
     font-size: 0.9em;
     margin-bottom: 15px;
     white-space: pre-wrap;
@@ -527,7 +531,7 @@ body.dark-mode #exportJsonBtn { color: #fff; }
     padding: 10px;
     margin-bottom: 20px;
     border: 1px solid var(--input-border); /* Theme variable */
-    border-radius: 6px;
+    border-radius: var(--border-radius-base); /* Use variable */
     box-sizing: border-box;
     font-family: monospace;
     font-size: 0.95em;
@@ -538,7 +542,7 @@ body.dark-mode #exportJsonBtn { color: #fff; }
 .modal textarea:focus {
     outline: none;
     border-color: var(--input-focus-border); /* Theme variable */
-    box-shadow: 0 0 0 2px var(--input-focus-shadow); /* Theme variable */
+    box-shadow: 0 0 0 3px var(--input-focus-shadow); /* Consistent focus shadow */
 }
 
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
@@ -572,7 +576,7 @@ body.dark-mode #exportJsonBtn { color: #fff; }
     max-height: 40vh; /* Limit height and make scrollable */
     overflow-y: auto;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: var(--border-radius-base); /* Use variable */
     padding: 10px;
     margin-bottom: 20px;
     background-color: var(--bg-color); /* Match page background */
@@ -667,8 +671,8 @@ body.dark-mode #exportJsonBtn { color: #fff; }
     right: 0; /* Align to the right edge of the button */
     background-color: var(--container-bg);
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    box-shadow: 0 4px 12px var(--shadow-color);
+    border-radius: var(--border-radius-base); /* Use variable */
+    box-shadow: 0 4px 12px var(--shadow-color); /* Keep shadow */
     padding: 5px 0; /* Padding top/bottom */
     min-width: 120px; /* Minimum width */
     z-index: 10; /* Ensure it's above nearby elements */
@@ -699,7 +703,7 @@ body.dark-mode #exportJsonBtn { color: #fff; }
     font-size: 0.9em;
     font-weight: normal; /* Override default button bold */
     box-shadow: none; /* Override default button shadow */
-    border-radius: 0; /* Remove individual button radius */
+    border-radius: 0; /* Keep dropdown items square */
 }
 
 .theme-dropdown button:hover {
@@ -856,7 +860,7 @@ body.palette-rainbow.dark-mode {
     color: var(--text-muted-color);
     font-size: 1.2em;
     padding: 5px 10px;
-    border-radius: 6px;
+    border-radius: var(--border-radius-base); /* Use variable */
     cursor: pointer;
     transition: color 0.2s ease, border-color 0.2s ease;
 }
@@ -869,6 +873,7 @@ body.palette-rainbow.dark-mode {
 .palette-dropdown {
     /* Styles inherited from .theme-dropdown */
     min-width: 130px; /* Adjust width if needed */
+    border-radius: var(--border-radius-base); /* Rounded dropdown */
 }
 
 /* Adjust triangle position for palette dropdown if needed */
@@ -944,8 +949,8 @@ body.dark-mode .collapsible-toggle:hover {
 .admin-container {
     background-color: var(--container-bg);
     padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px var(--shadow-color);
+    border-radius: var(--border-radius-large); /* Use variable */
+    box-shadow: 0 4px 12px var(--shadow-color); /* Softer shadow */
     width: 100%;
     max-width: 900px; /* Wider for admin view */
     box-sizing: border-box;
@@ -974,7 +979,7 @@ body.dark-mode .collapsible-toggle:hover {
     max-height: 40vh; /* Limit height */
     overflow-y: auto;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
+    border-radius: var(--border-radius-base); /* Use variable */
     padding: 10px;
     background-color: var(--bg-color); /* Match page background */
     margin-bottom: 20px;
@@ -1033,6 +1038,7 @@ body.dark-mode .collapsible-toggle:hover {
 /* Smaller buttons for admin lists */
 .admin-user-item button, .admin-card-item button {
     padding: 5px 10px;
+    border-radius: var(--border-radius-base); /* Rounded admin buttons */
     font-size: 0.85em;
 }
 
