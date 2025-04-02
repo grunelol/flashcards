@@ -1,0 +1,143 @@
+# Revised Login System Plan
+
+## 1. Overview
+
+This document outlines the plan for implementing a user authentication system for the existing flashcard application. The goal is to allow users to register, log in, and manage their own private set of flashcards, distinct from other users. The system will leverage the existing backend infrastructure (Node.js/Express/PostgreSQL) and frontend (HTML/CSS/Vanilla JS). Security and seamless integration with the current application are key priorities.
+
+## 2. Core Features
+
+*   **User Registration:** Allow new users to create an account with a unique username and password.
+*   **User Login:** Enable registered users to log in securely.
+*   **Session Management:** Implement secure session handling using server-side sessions and cookies.
+*   **User-Specific Flashcards:** Modify the existing flashcard functionality so that cards are associated with the logged-in user. Users can only view and manage their own cards.
+*   **Card Limit:** Enforce a limit of 500 flashcards per user.
+*   **Logout:** Allow users to securely end their session.
+
+## 3. Technology Stack (Confirmed & Required)
+
+*   **Frontend:** HTML, CSS, Vanilla JavaScript (using existing `index.html`, `style.css`, `script.js`)
+*   **Backend:** Node.js with Express.js (modifying existing `backend/server.js`)
+*   **Database:** PostgreSQL (using the existing database connection configured via `process.env.DATABASE_URL`)
+*   **Password Hashing:** `bcrypt` library (to be added)
+*   **Session Management:** `express-session` library (to be added) with a suitable session store (e.g., `connect-pg-simple` for PostgreSQL persistence).
+*   **Input Sanitization:** `dompurify` (already in use on backend)
+
+## 4. Implementation Details
+
+### 4.1. Database Schema Changes (PostgreSQL)
+
+*   **Create `users` Table:**
+    ```sql
+    CREATE TABLE IF NOT EXISTS users (
+      user_id SERIAL PRIMARY KEY,
+      username VARCHAR(255) UNIQUE NOT NULL,
+      password_hash VARCHAR(60) NOT NULL, -- bcrypt hashes are typically 60 chars
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    ```
+*   **Modify Existing `cards` Table:**
+    *   Add a `user_id` column to associate cards with users.
+    *   Make `user_id` a foreign key referencing the `users` table.
+    ```sql
+    -- Add the column (allow NULL initially if cards already exist)
+    ALTER TABLE cards ADD COLUMN user_id INTEGER;
+
+    -- Add the foreign key constraint (assuming users table exists)
+    -- Consider how to handle existing cards (assign to a default user, delete, or prevent adding FK until handled)
+    -- For a clean start, it might be easier to clear existing cards before adding the constraint.
+    -- Or, add the constraint with ON DELETE CASCADE if users deleting accounts should remove their cards.
+    ALTER TABLE cards
+      ADD CONSTRAINT fk_user
+      FOREIGN KEY(user_id)
+      REFERENCES users(user_id)
+      ON DELETE CASCADE; -- Decide on deletion behavior (CASCADE, SET NULL, RESTRICT)
+
+    -- Make the user_id column NOT NULL after associating existing cards or if starting fresh
+    ALTER TABLE cards ALTER COLUMN user_id SET NOT NULL;
+    ```
+    *(Note: Handling existing cards needs a strategy - potentially a migration script or manual update).*
+
+### 4.2. Backend (`backend/server.js` & New Files)
+
+*   **Dependencies:** Install `bcrypt`, `express-session`, and a session store like `connect-pg-simple`.
+    ```bash
+    npm install bcrypt express-session connect-pg-simple
+    ```
+*   **Middleware:**
+    *   **Session Configuration:** Configure `express-session` with a strong secret (from environment variables), secure cookie settings (`HttpOnly`, `Secure` - requires HTTPS, `SameSite=Strict`), and the PostgreSQL session store.
+    *   **Authentication Middleware (`isAuthenticated`):** Create middleware to check if `req.session.userId` exists. Protect all card-related endpoints (`/cards`, `/cards/:id`, `/cards/all`, `/cards/bulk`) and the user status endpoint (`/user/status`) with this middleware. If not authenticated, return a 401 Unauthorized error.
+*   **API Endpoints:**
+    *   `POST /register`:
+        *   Receive username, password. Validate input.
+        *   Check if username exists.
+        *   Hash password using `bcrypt.hash`.
+        *   Store new user in `users` table. Return success or error.
+    *   `POST /login`:
+        *   Receive username, password. Validate input.
+        *   Find user by username.
+        *   If user exists, compare provided password with stored hash using `bcrypt.compare`.
+        *   If valid, regenerate session, store `userId` in `req.session`, and return user info (e.g., username).
+        *   Return success or 401 Unauthorized.
+    *   `POST /logout`:
+        *   Destroy the session using `req.session.destroy()`.
+        *   Clear the session cookie. Return 204 No Content.
+    *   `GET /user/status`: (Requires authentication)
+        *   Return information about the logged-in user (e.g., `username`, `userId`, potentially card count). Useful for frontend state.
+    *   **Modify Existing Card Endpoints:**
+        *   `GET /cards`: (Requires authentication) Fetch cards WHERE `user_id = req.session.userId`.
+        *   `POST /cards`: (Requires authentication)
+            *   Check user's card count (`SELECT COUNT(*) FROM cards WHERE user_id = req.session.userId`).
+            *   If count < 500, insert new card with `user_id = req.session.userId`.
+            *   Return new card or 403 Forbidden (limit reached).
+        *   `PUT /cards/:id`: (Requires authentication)
+            *   Verify card with `:id` exists AND belongs to `req.session.userId`.
+            *   Update card. Return updated card or 403 Forbidden/404 Not Found.
+        *   `DELETE /cards/:id`: (Requires authentication)
+            *   Verify card with `:id` exists AND belongs to `req.session.userId`.
+            *   Delete card. Return 204 No Content or 403 Forbidden/404 Not Found.
+        *   `POST /cards/bulk`: (Requires authentication)
+            *   Check user's current card count + number of cards being imported.
+            *   If total <= 500, insert cards with `user_id = req.session.userId`. Use a transaction.
+            *   Return import result or 403 Forbidden (limit reached).
+        *   `DELETE /cards/all`: (Requires authentication) Delete cards WHERE `user_id = req.session.userId`. Return 204 No Content.
+*   **CORS Configuration:** Update CORS options to allow credentials: `credentials: true`.
+*   **Error Handling:** Enhance error handling for 401 (Unauthorized), 403 (Forbidden), 404 (Not Found), and 400 (Bad Request) scenarios.
+
+### 4.3. Frontend (`script.js`, `index.html`)
+
+*   **Initial State:** Modify `initializeApp` or related logic. Check if the user is logged in (e.g., by calling `/user/status`).
+    *   If logged in: Fetch user-specific cards (`/cards`) and display the main flashcard interface. Show username and logout button.
+    *   If not logged in: Hide the main flashcard interface and display Login/Registration forms/views.
+*   **Login/Registration UI:** Add HTML elements for login and registration forms (potentially in modals or separate views).
+*   **API Calls:**
+    *   Implement `fetch` calls for `/register`, `/login`, `/logout`.
+    *   Update existing `fetch` calls for card operations to include credentials (`credentials: 'include'`) so session cookies are sent.
+    *   Handle API responses, including errors (e.g., display messages for invalid login, username taken, card limit reached).
+*   **State Management:** Adapt frontend state variables (`flashcardsData`, etc.) to only hold the logged-in user's data.
+*   **Logout Button:** Add a logout button that calls the `/logout` endpoint and resets the frontend UI to the logged-out state.
+*   **Card Limit Display:** Optionally display the user's current card count vs. the limit (e.g., "123 / 500 cards").
+
+## 5. Security Considerations (Reiteration & Emphasis)
+
+*   **Password Hashing:** Use `bcrypt` correctly (async, sufficient rounds).
+*   **Input Validation/Sanitization:** Continue using `DOMPurify` on backend for card content. Validate all inputs (lengths, formats) on both frontend and backend.
+*   **HTTPS:** Ensure deployment uses HTTPS (already likely with Render/Netlify).
+*   **Session Security:** Implement `express-session` securely (strong secret, secure cookie flags, PostgreSQL store for persistence). Regenerate session ID on login.
+*   **Authorization:** Critically ensure all backend card operations strictly check `req.session.userId` against the `user_id` associated with the card being accessed/modified.
+*   **Rate Limiting:** (Recommended) Add rate limiting (e.g., using `express-rate-limit`) to `/login` and `/register` endpoints.
+*   **Dependencies:** Keep dependencies updated (`npm audit`).
+*   **CORS:** Ensure `credentials: true` is set correctly in CORS config and `credentials: 'include'` in frontend fetch options.
+
+## 6. Next Steps
+
+1.  **Backup:** Backup the current database and codebase.
+2.  **Backend - Dependencies:** Install `bcrypt`, `express-session`, `connect-pg-simple`.
+3.  **Backend - Database:** Apply schema changes (create `users` table, alter `cards` table, handle existing data).
+4.  **Backend - Config:** Configure `express-session` and session store. Update CORS.
+5.  **Backend - Auth Endpoints:** Implement `/register`, `/login`, `/logout`, `/user/status` endpoints.
+6.  **Backend - Middleware:** Implement `isAuthenticated` middleware.
+7.  **Backend - Card Endpoints:** Modify existing card endpoints (`/cards`, `/cards/:id`, `/cards/all`, `/cards/bulk`) to use `isAuthenticated` middleware and filter/operate based on `req.session.userId`. Implement the card limit check.
+8.  **Frontend - UI:** Add Login/Register forms/views and Logout button to `index.html`. Adjust initial UI visibility based on login status.
+9.  **Frontend - Logic:** Implement API calls for auth endpoints. Modify existing card API calls to send credentials. Handle login state and UI changes. Adapt card loading/display logic.
+10. **Testing:** Thoroughly test registration, login, logout, user-specific card operations, card limits, error handling, and security aspects.
+11. **Refinement:** Refine UI/UX based on testing.
