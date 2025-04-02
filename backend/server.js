@@ -171,12 +171,12 @@ authRouter.post('/register', registerLimiter, async (req, res, next) => {
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required.' });
     }
-    // Basic Input Validation
-    if (username.length < 3 || username.length > 30) {
-        return res.status(400).json({ error: 'Username must be between 3 and 30 characters.' });
+    // Basic Input Validation (Updated Minimum Length)
+    if (username.length < 4 || username.length > 30) {
+        return res.status(400).json({ error: 'Username must be between 4 and 30 characters.' });
     }
-    if (password.length < 8) {
-        return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+    if (password.length < 4) {
+        return res.status(400).json({ error: 'Password must be at least 4 characters long.' });
     }
     // Add more complex validation/complexity checks later if desired
 

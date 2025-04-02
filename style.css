@@ -85,6 +85,98 @@ body {
     transition: background-color 0.3s ease; /* Theme transition */
 }
 
+/* --- Authentication Container Styles --- */
+.auth-container {
+    background-color: var(--container-bg);
+    padding: 30px 40px; /* More horizontal padding */
+    border-radius: 12px;
+    box-shadow: 0 5px 15px var(--shadow-color);
+    width: 100%;
+    max-width: 450px; /* Max width for login form */
+    box-sizing: border-box;
+    transition: background-color 0.3s ease;
+    margin: auto; /* Center vertically and horizontally if body uses flex */
+    text-align: center; /* Center heading and form elements */
+}
+
+.auth-container h1 {
+    font-size: 1.8em; /* Slightly smaller than app header */
+    margin-bottom: 25px;
+    color: var(--text-color);
+    text-align: center;
+}
+
+/* Style form groups within auth container */
+.auth-container .form-group {
+    margin-bottom: 20px; /* Increased spacing */
+    text-align: left; /* Align labels and inputs left */
+}
+
+.auth-container .form-group label {
+    display: block;
+    margin-bottom: 8px; /* More space below label */
+    font-weight: 600;
+    color: var(--text-color);
+    font-size: 0.95em;
+}
+
+.auth-container .form-group input[type="text"],
+.auth-container .form-group input[type="password"] {
+    width: 100%;
+    padding: 12px 15px; /* Consistent padding */
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: var(--font-family);
+    font-size: 1em;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-container .form-group input[type="text"]:focus,
+.auth-container .form-group input[type="password"]:focus {
+    outline: none;
+    border-color: var(--input-focus-border);
+    box-shadow: 0 0 0 3px var(--input-focus-shadow); /* Slightly larger focus shadow */
+}
+
+/* Style for the hint text */
+.input-hint {
+    display: block;
+    font-size: 0.8em;
+    color: var(--text-muted-color);
+    margin-top: 5px;
+    text-align: right; /* Align hint to the right */
+}
+
+
+/* Style form actions (buttons) within auth container */
+.auth-container .form-actions {
+    display: flex;
+    justify-content: space-between; /* Space out login/register */
+    gap: 15px;
+    margin-top: 30px; /* More space above buttons */
+}
+
+/* Apply general button styles */
+.auth-container button {
+    flex-grow: 1; /* Make buttons share space */
+    /* Inherits base button styles */
+}
+
+/* Ensure secondary button style applies */
+.auth-container #registerBtn {
+    /* Inherits .btn-secondary styles */
+}
+
+/* Ensure auth status message uses general status styles */
+#authMessage {
+    /* Inherits .status-message styles */
+    /* Ensure it's visible when needed */
+    display: none; /* Controlled by JS */
+}
+
 /* --- Header --- */
 .app-header {
     display: flex;
