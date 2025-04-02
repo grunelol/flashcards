@@ -7,14 +7,35 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Add Font Awesome for icons (optional but nice for status/theme) -->
+    <!-- Add Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="main-container">
+
+    <!-- Authentication Container -->
+    <div id="authContainer" class="auth-container">
+        <h1>Flashcards Login</h1>
+        <div id="authMessage" class="status-message" style="display: none;"></div> <!-- For login/register errors -->
+        <div class="form-group">
+            <label for="usernameInput">Username:</label>
+            <input type="text" id="usernameInput" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label for="passwordInput">Password:</label>
+            <input type="password" id="passwordInput" placeholder="Enter password">
+        </div>
+        <div class="form-actions">
+            <button id="loginBtn">Login</button>
+            <button id="registerBtn" class="btn-secondary">Register</button>
+        </div>
+    </div>
+
+    <!-- Main Application Container (Initially Hidden) -->
+    <div id="mainContainer" class="main-container" style="display: none;">
         <header class="app-header">
             <h1>Enhanced Flashcards</h1>
+            <!-- Existing Theme/Palette Selectors -->
             <div class="theme-selector-container">
                 <button id="themeToggleBtn" title="Toggle Dark/Light Mode"><i class="fas fa-sun"></i></button>
                 <div id="themeDropdown" class="theme-dropdown">
@@ -23,16 +44,16 @@
                     <button data-theme-preference="system"><i class="fas fa-desktop"></i> System</button>
                 </div>
             </div>
-
-            <!-- Color Palette Selector -->
             <div class="palette-selector-container">
                  <button id="paletteToggleBtn" title="Change Color Palette"><i class="fas fa-palette"></i></button>
-                 <div id="paletteDropdown" class="palette-dropdown theme-dropdown"> <!-- Reuse theme-dropdown styles -->
+                 <div id="paletteDropdown" class="palette-dropdown theme-dropdown">
                      <button data-palette-preference="default"><i class="fas fa-circle" style="color: var(--primary-color);"></i> Default</button>
-                     <button data-palette-preference="warm"><i class="fas fa-circle" style="color: #e07a5f;"></i> Warm</button> <!-- Example warm color -->
-                     <button data-palette-preference="rainbow"><i class="fas fa-circle" style="color: #8ecae6;"></i> Rainbow</button> <!-- Example rainbow color -->
+                     <button data-palette-preference="warm"><i class="fas fa-circle" style="color: #e07a5f;"></i> Warm</button>
+                     <button data-palette-preference="rainbow"><i class="fas fa-circle" style="color: #8ecae6;"></i> Rainbow</button>
                  </div>
             </div>
+            <!-- Logout Button -->
+            <button id="logoutBtn" class="btn-secondary" title="Logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </header>
 
         <!-- Loading Indicator -->
@@ -41,11 +62,11 @@
             <p>Loading...</p>
         </div>
 
-        <div id="statusMessage" class="status-message"></div>
+        <div id="statusMessage" class="status-message"></div> <!-- For general app status -->
 
         <!-- Filtering and Search -->
         <div class="filter-search-area">
-            <div class="filter-group" style="display: none;"> <!-- Hide filter dropdown for now -->
+            <div class="filter-group" style="display: none;">
                 <label for="filterStatus">Filter:</label>
                 <select id="filterStatus">
                     <option value="all" selected>All Cards</option>
@@ -88,29 +109,27 @@
                 <button id="prevBtn" title="Previous Card (Left Arrow)">‹ Prev</button>
                 <button id="flipBtn" title="Flip Card (Spacebar)">Flip</button>
                 <button id="editBtn" title="Edit Card">Edit</button>
-                <button id="deleteThisCardBtn" class="btn-secondary" title="Delete This Card"><i class="fas fa-trash-alt"></i></button> <!-- New Delete This Card Button -->
+                <button id="deleteThisCardBtn" class="btn-secondary" title="Delete This Card"><i class="fas fa-trash-alt"></i></button>
                 <button id="randomBtn" title="Random Card">Random</button>
                 <button id="nextBtn" title="Next Card (Right Arrow)">Next ›</button>
             </div>
         </div>
 
-        <div class="controls-area collapsible-section"> <!-- Add class for styling -->
-             <h2 id="manageDeckToggle" class="collapsible-toggle"> <!-- Add ID and class -->
+        <div class="controls-area collapsible-section">
+             <h2 id="manageDeckToggle" class="collapsible-toggle">
                  <span>Manage Deck</span>
-                 <i class="fas fa-chevron-down toggle-icon"></i> <!-- Add icon -->
+                 <i class="fas fa-chevron-down toggle-icon"></i>
              </h2>
-             <div id="manageDeckContent" class="collapsible-content"> <!-- Wrap content -->
+             <div id="manageDeckContent" class="collapsible-content">
                  <div class="control-buttons">
                     <button id="shuffleBtn">Shuffle View</button>
                     <button id="importJsonBtn">Import JSON</button>
                     <button id="exportJsonBtn">Export JSON</button>
-                    <button id="deleteOptionsBtn" class="btn-warning">Delete Options...</button> <!-- Renamed -->
-                    <!-- Removed Delete Current and Delete Filtered -->
+                    <button id="deleteOptionsBtn" class="btn-warning">Delete Options...</button>
                     <button id="resetBtn" class="btn-danger">Reset Deck</button>
                     <button id="reconnectBtn" class="btn-secondary" title="Reload cards from database"><i class="fas fa-sync-alt"></i> Reconnect</button>
                  </div>
 
-                 <!-- Move Add Card Area inside collapsible content -->
                  <div class="add-card-area">
                     <h2>Add New Card</h2>
                     <div class="form-group">
@@ -130,11 +149,9 @@
              </div> <!-- End of manageDeckContent -->
         </div> <!-- End of controls-area -->
 
-        <!-- Add Card Area was moved inside .controls-area -->
+    </div> <!-- /mainContainer -->
 
-    </div> <!-- /main-container -->
-
-    <!-- Import JSON Modal (Keep existing) -->
+    <!-- Import JSON Modal -->
     <div id="importModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" id="closeImportModalBtn">&times;</span>
@@ -157,7 +174,7 @@
         <div class="modal-content">
             <span class="close-btn" id="closeEditModalBtn">&times;</span>
             <h2>Edit Card</h2>
-            <input type="hidden" id="editCardIndexInput"> <!-- To store the index being edited -->
+            <input type="hidden" id="editCardIndexInput"> <!-- Stores card ID -->
             <div class="form-group">
                 <label for="editQuestionInput">Question:</label>
                 <textarea id="editQuestionInput" rows="4"></textarea>
@@ -172,8 +189,6 @@
             </div>
         </div>
     </div>
-
-    <script src="script.js"></script>
 
     <!-- Delete Options Modal -->
     <div id="deleteOptionsModal" class="modal">
@@ -191,5 +206,7 @@
             </div>
         </div>
     </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
