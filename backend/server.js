@@ -28,7 +28,7 @@ app.use(morgan('dev')); // HTTP request logging
 
 // Enable CORS - Restrict to deployed frontend URL and explicitly handle preflight
 app.use(cors({
-    origin: 'https://flashcardsgrune.netlify.app', // Adjust if your frontend URL changes
+    origin: ['https://flashcardsgrune.netlify.app', 'https://fcg-dev.netlify.app'], // Allow both deployed and dev frontend URLs
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     preflightContinue: false,
