@@ -1,5 +1,6 @@
 # Analysis Reports
 SECURITY_ANALYSIS.md
+LOGIN_SYSTEM_PLAN.md
 
 # Environment Variables
 # Never commit .env files containing secrets!
