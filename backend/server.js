@@ -9,6 +9,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet'); // Require helmet
 
 // Setup DOMPurify
 const window = new JSDOM('').window;
@@ -25,6 +27,7 @@ if (JWT_SECRET === 'your-default-very-strong-secret-key') {
 
 // --- Middleware ---
 app.use(morgan('dev')); // HTTP request logging
+app.use(helmet()); // Use helmet for security headers
 
 // Enable CORS - Restrict to deployed frontend URL and explicitly handle preflight
 app.use(cors({
@@ -138,13 +141,44 @@ function authenticateToken(req, res, next) {
 // == Auth Routes ==
 const authRouter = express.Router();
 
+// --- Rate Limiting ---
+// Trust the first proxy (e.g., Render's load balancer)
+// Note: If not behind a proxy, remove 'trustProxy: 1'
+app.set('trust proxy', 1);
+
+const loginLimiter = rateLimit({
+	windowMs: 1 * 60 * 1000, // 1 minute
+	max: 3, // Limit each IP to 3 login requests per windowMs
+	message: { error: 'Too many login attempts from this IP, please try again after a minute' },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    keyGenerator: (req, res) => req.ip // Use IP address for keying
+});
+
+const registerLimiter = rateLimit({
+	windowMs: 1 * 60 * 1000, // 1 minute
+	max: 2, // Limit each IP to 2 registration requests per windowMs
+	message: { error: 'Too many registration attempts from this IP, please try again after a minute' },
+    standardHeaders: true,
+	legacyHeaders: false,
+    keyGenerator: (req, res) => req.ip
+});
+
 // POST /api/auth/register - Register a new user
-authRouter.post('/register', async (req, res, next) => {
+// Apply limiter specifically to the register route
+authRouter.post('/register', registerLimiter, async (req, res, next) => {
     const { username, password } = req.body;
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required.' });
     }
-    // Add more validation if needed (e.g., password complexity)
+    // Basic Input Validation
+    if (username.length < 3 || username.length > 30) {
+        return res.status(400).json({ error: 'Username must be between 3 and 30 characters.' });
+    }
+    if (password.length < 8) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+    }
+    // Add more complex validation/complexity checks later if desired
 
     try {
         // Check if username already exists
@@ -169,7 +203,8 @@ authRouter.post('/register', async (req, res, next) => {
 });
 
 // POST /api/auth/login - Log in a user
-authRouter.post('/login', async (req, res, next) => {
+// Apply limiter specifically to the login route
+authRouter.post('/login', loginLimiter, async (req, res, next) => {
     const { username, password } = req.body;
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required.' });

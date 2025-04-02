@@ -6,6 +6,7 @@ DEPLOYMENT_GUIDE.md
 DEPLOYMENT_PLAN.txt
 LOGIN_SYSTEM_PLAN.txt
 README.txt
+security_suggestions.md
 
 # Environment Variables
 # Never commit .env files containing secrets!
