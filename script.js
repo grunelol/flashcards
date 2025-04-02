@@ -98,6 +98,7 @@ const MANAGE_DECK_COLLAPSED_KEY = 'manageDeckCollapsed';
 let authToken = null; // Stores the JWT
 let isLoggedIn = false;
 let currentAdminSelectedUserId = null; // Track which user's cards are shown in admin view
+let loginRetryInterval = null; // Interval ID for login rate limit countdown
 
 // --- Helper: API Fetch with Auth ---
 async function fetchWithAuth(url, options = {}) {
@@ -209,6 +210,9 @@ async function handleLogin() {
     }
 
     showAuthMessage("Logging in...", 'info', 0); // Show indefinitely
+    // Clear any previous countdown and re-enable button before trying again
+    clearInterval(loginRetryInterval);
+    if (loginBtn) loginBtn.disabled = false;
     try {
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
@@ -219,7 +223,14 @@ async function handleLogin() {
         const data = await response.json(); // Try to parse JSON
 
         if (!response.ok) {
-             throw new Error(data.error || `Login failed (status: ${response.status})`);
+            // Check specifically for rate limit error with retry info
+            if (response.status === 429 && data && typeof data.retryAfterSeconds === 'number') {
+                startLoginCountdown(data.retryAfterSeconds, data.error); // Pass seconds and the message
+            } else {
+                // Throw generic error for other failures
+                throw new Error(data.error || `Login failed (status: ${response.status})`);
+            }
+            return; // Stop execution here if response was not ok
         }
 
         if (!data.token) {
@@ -272,9 +283,12 @@ async function handleLogin() {
             loadData(); // Load user-specific cards
         }
 
-    } catch (error) {
+    } catch (error) { // Catch errors thrown from the try block (e.g., network, non-rate-limit errors)
         console.error("Login error:", error);
-        showAuthMessage(`Login failed: ${error.message}`, 'error');
+        // Don't show message if it was handled by the rate limit countdown
+        if (!loginRetryInterval) {
+            showAuthMessage(`Login failed: ${error.message}`, 'error');
+        }
         // Ensure main app is hidden if login fails after a previous session
         if (mainContainer) mainContainer.style.display = 'none';
         if (authContainer) authContainer.style.display = 'block';
@@ -320,6 +334,37 @@ function handleLogout() {
     console.log("User logged out.");
 }
 
+// --- Login Rate Limit Countdown ---
+function startLoginCountdown(seconds, initialMessage) {
+    console.log(`Starting login countdown: ${seconds} seconds`);
+    if (!loginBtn || !authMessageEl) return;
+
+    loginBtn.disabled = true; // Disable login button
+    let remainingSeconds = Math.ceil(seconds); // Ensure integer
+
+    // Function to update the message
+    const updateMessage = () => {
+        if (remainingSeconds > 0) {
+            const message = initialMessage || `Too many login attempts. Please try again in ${remainingSeconds} seconds.`;
+            // Update the message with the current remaining time
+            const timeMessage = message.replace(/(\d+)\s+seconds?/, `${remainingSeconds} second${remainingSeconds !== 1 ? 's' : ''}`);
+            showAuthMessage(timeMessage, 'warning', 0); // Show indefinitely, type warning
+            remainingSeconds--;
+        } else {
+            clearInterval(loginRetryInterval);
+            loginRetryInterval = null;
+            loginBtn.disabled = false; // Re-enable button
+            showAuthMessage("You can try logging in again.", 'info', 5000); // Inform user they can retry
+        }
+    };
+
+    // Clear any existing interval first
+    clearInterval(loginRetryInterval);
+
+    // Call immediately and then set interval
+    updateMessage();
+    loginRetryInterval = setInterval(updateMessage, 1000);
+}
 
 // --- Core Functions (Modified for Auth) ---
 

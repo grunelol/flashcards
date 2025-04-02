@@ -167,10 +167,20 @@ app.set('trust proxy', 1);
 const loginLimiter = rateLimit({
 	windowMs: 1 * 60 * 1000, // 1 minute
 	max: 3, // Limit each IP to 3 login requests per windowMs
-	message: { error: 'Too many login attempts from this IP, please try again after a minute' },
+    // message: { error: 'Too many login attempts from this IP, please try again after a minute' }, // Replaced by handler
     standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
 	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    keyGenerator: (req, res) => req.ip // Use IP address for keying
+    keyGenerator: (req, res) => req.ip, // Use IP address for keying
+    handler: (req, res, next, options) => {
+        const resetTime = req.rateLimit.resetTime; // Date object when the limit resets
+        const currentTime = new Date();
+        const retryAfterSeconds = Math.max(0, Math.ceil((resetTime.getTime() - currentTime.getTime()) / 1000)); // Calculate remaining seconds
+
+        res.status(options.statusCode).json({
+            error: `Too many login attempts. Please try again in ${retryAfterSeconds} seconds.`,
+            retryAfterSeconds: retryAfterSeconds // Send seconds remaining for frontend timer
+        });
+    }
 });
 
 const registerLimiter = rateLimit({
@@ -189,12 +199,12 @@ authRouter.post('/register', registerLimiter, async (req, res, next) => {
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required.' });
     }
-    // Basic Input Validation (Updated Minimum Length)
-    if (username.length < 4 || username.length > 30) {
-        return res.status(400).json({ error: 'Username must be between 4 and 30 characters.' });
+    // Basic Input Validation (Max length 25)
+    if (username.length < 4 || username.length > 25) {
+        return res.status(400).json({ error: 'Username must be between 4 and 25 characters.' });
     }
-    if (password.length < 4) {
-        return res.status(400).json({ error: 'Password must be at least 4 characters long.' });
+    if (password.length < 4 || password.length > 25) { // Added max length check for password
+        return res.status(400).json({ error: 'Password must be between 4 and 25 characters long.' });
     }
     // Add more complex validation/complexity checks later if desired
 
