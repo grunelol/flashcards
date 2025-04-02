@@ -61,6 +61,7 @@ async function initializeDatabase() {
                 id SERIAL PRIMARY KEY,
                 username VARCHAR(255) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
+                is_admin BOOLEAN DEFAULT FALSE, -- Add admin flag
                 created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
             );
         `);
@@ -115,6 +116,22 @@ async function initializeDatabase() {
 initializeDatabase(); // Run initialization
 
 // --- Authentication Middleware ---
+// --- Admin Authentication Middleware ---
+function authenticateAdmin(req, res, next) {
+    authenticateToken(req, res, () => { // First, run the standard token authentication
+        // Check if the user object exists and if isAdmin is true
+        if (req.user && req.user.isAdmin === true) {
+            console.log(`Admin Middleware: Access granted for admin user ID: ${req.user.id}`);
+            next(); // User is admin, proceed
+        } else {
+            console.log(`Admin Middleware: Access denied. User ID: ${req.user ? req.user.id : 'N/A'}, IsAdmin: ${req.user ? req.user.isAdmin : 'N/A'}`);
+            res.status(403).json({ error: 'Forbidden: Requires admin privileges.' }); // Forbidden if not admin
+        }
+    });
+}
+
+
+// --- Standard Authentication Middleware ---
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -130,7 +147,8 @@ function authenticateToken(req, res, next) {
             return res.sendStatus(403); // Forbidden if token is invalid
         }
         // Attach user info (at least the ID) to the request object
-        req.user = { id: userPayload.userId }; // Ensure payload property matches signing
+        // Attach user info (ID and admin status) to the request object
+        req.user = { id: userPayload.userId, isAdmin: userPayload.isAdmin };
         console.log(`Auth Middleware: Token verified for user ID: ${req.user.id}`);
         next(); // proceed to the next middleware or route handler
     });
@@ -212,7 +230,8 @@ authRouter.post('/login', loginLimiter, async (req, res, next) => {
 
     try {
         // Find user by username
-        const result = await pool.query('SELECT id, password_hash FROM users WHERE username = $1', [username]);
+        // Fetch id, password_hash, and is_admin status
+        const result = await pool.query('SELECT id, password_hash, is_admin FROM users WHERE username = $1', [username]);
         if (result.rowCount === 0) {
             console.log(`Login attempt failed: User not found - ${username}`);
             return res.status(401).json({ error: 'Invalid credentials.' }); // Unauthorized
@@ -228,7 +247,8 @@ authRouter.post('/login', loginLimiter, async (req, res, next) => {
         }
 
         // Generate JWT
-        const tokenPayload = { userId: user.id }; // Include user ID in payload
+        // Include user ID and admin status in payload
+        const tokenPayload = { userId: user.id, isAdmin: user.is_admin || false };
         const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '1d' }); // Token expires in 1 day
 
         console.log(`Login successful for user ID: ${user.id}`);
@@ -413,6 +433,97 @@ cardRouter.post('/bulk', async (req, res, next) => {
 });
 
 app.use('/api/cards', cardRouter); // Mount card routes under /api/cards
+
+
+// == Admin Routes (Protected by Admin Middleware) ==
+const adminRouter = express.Router();
+adminRouter.use(authenticateAdmin); // Apply admin auth middleware to all admin routes
+
+// GET /api/admin/users - List all users (excluding passwords)
+adminRouter.get('/users', async (req, res, next) => {
+    try {
+        const result = await pool.query('SELECT id, username, is_admin, created_at FROM users ORDER BY id ASC');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(`Admin Error: Fetching users failed:`, err.stack);
+        next(err);
+    }
+});
+
+// DELETE /api/admin/users/:userId - Delete a user and their cards (cascading delete)
+adminRouter.delete('/users/:userId', async (req, res, next) => {
+    const { userId } = req.params;
+    const adminUserId = req.user.id; // ID of the admin performing the action
+
+    if (isNaN(parseInt(userId))) {
+        return res.status(400).json({ error: 'Invalid user ID.' });
+    }
+    const targetUserId = parseInt(userId);
+
+    // Prevent admin from deleting themselves
+    if (targetUserId === adminUserId) {
+        return res.status(403).json({ error: 'Admin cannot delete their own account.' });
+    }
+
+    try {
+        // The ON DELETE CASCADE on the user_id foreign key in 'cards' table handles card deletion
+        const result = await pool.query('DELETE FROM users WHERE id = $1', [targetUserId]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+        console.log(`Admin Action: User ${targetUserId} deleted by admin ${adminUserId}`);
+        res.status(204).send();
+    } catch (err) {
+        console.error(`Admin Error: Deleting user ${targetUserId} failed:`, err.stack);
+        next(err);
+    }
+});
+
+// GET /api/admin/users/:userId/cards - Get all cards for a specific user
+adminRouter.get('/users/:userId/cards', async (req, res, next) => {
+    const { userId } = req.params;
+     if (isNaN(parseInt(userId))) {
+        return res.status(400).json({ error: 'Invalid user ID.' });
+    }
+    const targetUserId = parseInt(userId);
+
+    try {
+        const result = await pool.query(
+            'SELECT id, question, answer, created_at FROM cards WHERE user_id = $1 ORDER BY created_at ASC',
+            [targetUserId]
+        );
+        // It's okay if the user has no cards, return empty array
+        res.json(result.rows);
+    } catch (err) {
+        console.error(`Admin Error: Fetching cards for user ${targetUserId} failed:`, err.stack);
+        next(err);
+    }
+});
+
+// DELETE /api/admin/cards/:cardId - Delete any card by its ID
+adminRouter.delete('/cards/:cardId', async (req, res, next) => {
+    const { cardId } = req.params;
+    const adminUserId = req.user.id;
+     if (isNaN(parseInt(cardId))) {
+        return res.status(400).json({ error: 'Invalid card ID.' });
+    }
+    const targetCardId = parseInt(cardId);
+
+    try {
+        const result = await pool.query('DELETE FROM cards WHERE id = $1', [targetCardId]);
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Card not found.' });
+        }
+         console.log(`Admin Action: Card ${targetCardId} deleted by admin ${adminUserId}`);
+        res.status(204).send();
+    } catch (err) {
+        console.error(`Admin Error: Deleting card ${targetCardId} failed:`, err.stack);
+        next(err);
+    }
+});
+
+
+app.use('/api/admin', adminRouter); // Mount admin routes under /api/admin
 
 // --- Basic Error Handling ---
 app.use((err, req, res, next) => {

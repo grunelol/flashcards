@@ -65,6 +65,16 @@ let deleteAllCardsBtn = null;
 let deleteSelectedCardsBtn = null;
 let cancelDeleteBtn = null;
 
+// Admin Elements
+let adminContainer = null;
+let adminLogoutBtn = null;
+let adminStatusMessageEl = null;
+let adminUserListEl = null;
+let adminCardListEl = null;
+let adminSelectedUserDisplayEl = null;
+let adminThemeToggleBtn = null;
+let adminPaletteToggleBtn = null;
+
 // --- API Endpoint ---
 // Ensure the base URL points to where your backend API is hosted
 const API_BASE_URL = 'https://fcg-backend-dev.onrender.com/api'; // Added /api prefix
@@ -87,6 +97,7 @@ let searchTimeout;
 const MANAGE_DECK_COLLAPSED_KEY = 'manageDeckCollapsed';
 let authToken = null; // Stores the JWT
 let isLoggedIn = false;
+let currentAdminSelectedUserId = null; // Track which user's cards are shown in admin view
 
 // --- Helper: API Fetch with Auth ---
 async function fetchWithAuth(url, options = {}) {
@@ -126,6 +137,15 @@ async function fetchWithAuth(url, options = {}) {
         throw error; // Re-throw the error so the calling function knows it failed
     }
 }
+
+// --- Helper: Admin API Fetch ---
+// Wrapper around fetchWithAuth specifically for admin routes
+async function fetchAdminAPI(endpoint, options = {}) {
+    // Ensure endpoint starts with /api/admin
+    const url = endpoint.startsWith('/api/admin') ? `${API_BASE_URL}${endpoint.substring('/api/admin'.length)}` : `${API_BASE_URL}/admin${endpoint}`;
+    // Use fetchWithAuth which handles the token and base error handling
+    return fetchWithAuth(url, options);
+    }
 
 
 // --- Authentication Functions ---
@@ -211,17 +231,46 @@ async function handleLogin() {
         isLoggedIn = true;
         localStorage.setItem('authToken', authToken); // Store token
 
+        // --- Decode JWT Payload to check admin status ---
+        let isAdmin = false;
+        try {
+            const payloadBase64 = authToken.split('.')[1];
+            const decodedPayload = JSON.parse(atob(payloadBase64));
+            isAdmin = decodedPayload.isAdmin === true;
+            console.log("Decoded JWT Payload:", decodedPayload);
+        } catch (e) {
+            console.error("Error decoding JWT payload:", e);
+            // Handle error - perhaps logout or show error message
+            handleLogout();
+            showAuthMessage("Login failed: Could not process user role.", 'error');
+            return; // Stop execution
+        }
+
+        // --- Login Success ---
+        isLoggedIn = true; // Set global logged in flag
+        localStorage.setItem('authToken', authToken); // Store token
+
         // Clear auth form and message
         if (usernameInput) usernameInput.value = '';
         if (passwordInput) passwordInput.value = '';
         if (authMessageEl) authMessageEl.style.display = 'none';
 
-        // Switch UI
+        // Switch UI based on admin status
         if (authContainer) authContainer.style.display = 'none';
-        if (mainContainer) mainContainer.style.display = 'block'; // Show the main app
 
-        console.log("Login successful, loading user data...");
-        loadData(); // Load user-specific cards
+        if (isAdmin) {
+            console.log("Admin login detected. Initializing Admin Dashboard.");
+            if (mainContainer) mainContainer.style.display = 'none'; // Hide normal app
+            const adminContainer = document.getElementById('adminContainer'); // Get admin container (will be added next)
+            if (adminContainer) adminContainer.style.display = 'block'; // Show admin area
+            initializeAdminDashboard(); // Call function to populate admin area (will be added later)
+        } else {
+            console.log("Regular user login detected. Loading user data...");
+            const adminContainer = document.getElementById('adminContainer');
+            if (adminContainer) adminContainer.style.display = 'none'; // Hide admin area
+            if (mainContainer) mainContainer.style.display = 'block'; // Show the main app
+            loadData(); // Load user-specific cards
+        }
 
     } catch (error) {
         console.error("Login error:", error);
@@ -252,12 +301,21 @@ function handleLogout() {
     updateNavigationButtons(); // Disable buttons
 
     // Switch UI
+    // Ensure both main and admin containers are hidden on logout
     if (mainContainer) mainContainer.style.display = 'none';
+    const adminContainer = document.getElementById('adminContainer');
+    if (adminContainer) adminContainer.style.display = 'none';
     if (authContainer) authContainer.style.display = 'block';
 
     // Clear any lingering status messages
     clearStatusMessage();
     if (authMessageEl) authMessageEl.style.display = 'none'; // Clear auth message too
+
+    // Clear admin state if needed
+    currentAdminSelectedUserId = null;
+    if (adminUserListEl) adminUserListEl.innerHTML = '';
+    if (adminCardListEl) adminCardListEl.innerHTML = '<p>Select a user to view their cards.</p>';
+    if (adminSelectedUserDisplayEl) adminSelectedUserDisplayEl.textContent = 'Selected User: None';
 
     console.log("User logged out.");
 }
@@ -787,6 +845,8 @@ function showStatusMessage(message, type = 'info', duration = 3000) {
 }
 function clearStatusMessage() {
     if (statusMessageEl) statusMessageEl.style.display = 'none';
+    // Also clear admin status message
+    if (adminStatusMessageEl) adminStatusMessageEl.style.display = 'none';
 }
 
 // --- Import Modal Logic (Modified for Auth) ---
@@ -1048,7 +1108,246 @@ function handleKeyPress(event) {
     }
 }
 
-// --- Initialize Application (Modified for Auth) ---
+// --- Admin Dashboard Functions ---
+function showAdminStatusMessage(message, type = 'info', duration = 4000) {
+    if (!adminStatusMessageEl) return;
+    adminStatusMessageEl.textContent = message;
+    adminStatusMessageEl.className = `status-message status-${type}`; // Apply type class
+    adminStatusMessageEl.style.display = 'block';
+    // Use the main statusTimeout for simplicity, or create a separate one
+    clearTimeout(statusTimeout);
+    if (duration > 0) {
+        statusTimeout = setTimeout(() => {
+            if (adminStatusMessageEl) adminStatusMessageEl.style.display = 'none';
+        }, duration);
+    }
+}
+
+async function fetchAdminUsers() {
+    console.log("Admin Action: fetchAdminUsers triggered");
+    if (!adminUserListEl) return;
+    adminUserListEl.innerHTML = '<p>Loading users...</p>';
+    try {
+        const response = await fetchAdminAPI('/users'); // Uses admin fetch helper
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Failed to fetch users (status: ${response.status})`);
+        }
+        const users = await response.json();
+        renderAdminUserList(users);
+    } catch (error) {
+         if (!error.message.includes('Authentication failed')) { // Auth errors handled by fetchWithAuth
+            console.error("Admin Error fetching users:", error);
+            showAdminStatusMessage(`Error loading users: ${error.message}`, 'error', 5000);
+            adminUserListEl.innerHTML = '<p>Error loading users.</p>';
+         }
+    }
+}
+
+function renderAdminUserList(users) {
+    if (!adminUserListEl) return;
+    adminUserListEl.innerHTML = ''; // Clear previous list
+    if (!users || users.length === 0) {
+        adminUserListEl.innerHTML = '<p>No users found.</p>';
+        return;
+    }
+
+    users.forEach(user => {
+        const item = document.createElement('div');
+        item.className = 'admin-user-item';
+        item.dataset.userId = user.id; // Store user ID
+
+        const userInfo = document.createElement('span');
+        userInfo.textContent = `${user.username} (ID: ${user.id})`;
+        if (user.is_admin) {
+            const adminBadge = document.createElement('strong');
+            adminBadge.textContent = ' [Admin]';
+            adminBadge.style.color = 'var(--warning-color)'; // Or another distinct color
+            userInfo.appendChild(adminBadge);
+        }
+
+        const userDetails = document.createElement('span');
+        userDetails.className = 'user-details';
+        userDetails.textContent = `Joined: ${new Date(user.created_at).toLocaleDateString()}`;
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const viewCardsBtn = document.createElement('button');
+        viewCardsBtn.textContent = 'View Cards';
+        viewCardsBtn.classList.add('btn-secondary');
+        viewCardsBtn.onclick = () => fetchAdminUserCards(user.id, user.username);
+
+        const deleteUserBtn = document.createElement('button');
+        deleteUserBtn.textContent = 'Delete User';
+        deleteUserBtn.classList.add('btn-danger');
+        deleteUserBtn.onclick = () => deleteAdminUser(user.id, user.username);
+        // Disable delete for admin's own account (redundant check, backend prevents too)
+        if (String(user.id) === String(req.user?.id)) { // Assuming req.user is somehow available or check decoded token
+             // deleteUserBtn.disabled = true; // Need a way to get current user ID here
+        }
+
+
+        actions.appendChild(viewCardsBtn);
+        actions.appendChild(deleteUserBtn);
+
+        item.appendChild(userInfo);
+        item.appendChild(userDetails);
+        item.appendChild(actions);
+        adminUserListEl.appendChild(item);
+    });
+}
+
+async function fetchAdminUserCards(userId, username) {
+    console.log(`Admin Action: fetchAdminUserCards triggered for user ${userId}`);
+    if (!adminCardListEl || !adminSelectedUserDisplayEl) return;
+
+    currentAdminSelectedUserId = userId; // Store currently viewed user
+    adminSelectedUserDisplayEl.textContent = `Selected User: ${username} (ID: ${userId})`;
+    adminCardListEl.innerHTML = '<p>Loading cards...</p>';
+
+    try {
+        const response = await fetchAdminAPI(`/users/${userId}/cards`);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Failed to fetch cards (status: ${response.status})`);
+        }
+        const cards = await response.json();
+        renderAdminCardList(cards);
+    } catch (error) {
+         if (!error.message.includes('Authentication failed')) {
+            console.error(`Admin Error fetching cards for user ${userId}:`, error);
+            showAdminStatusMessage(`Error loading cards for user ${username}: ${error.message}`, 'error', 5000);
+            adminCardListEl.innerHTML = `<p>Error loading cards for user ${username}.</p>`;
+         }
+    }
+}
+
+function renderAdminCardList(cards) {
+     if (!adminCardListEl) return;
+    adminCardListEl.innerHTML = ''; // Clear previous list
+    if (!cards || cards.length === 0) {
+        adminCardListEl.innerHTML = '<p>This user has no cards.</p>';
+        return;
+    }
+
+     cards.forEach(card => {
+        const item = document.createElement('div');
+        item.className = 'admin-card-item';
+        item.dataset.cardId = card.id;
+
+        const cardDetails = document.createElement('div');
+        cardDetails.className = 'card-details';
+
+        const questionSpan = document.createElement('span');
+        questionSpan.className = 'question';
+        questionSpan.textContent = `Q: ${card.question}`;
+        questionSpan.title = card.question; // Show full text on hover
+
+        const answerSpan = document.createElement('span');
+        answerSpan.className = 'answer';
+        answerSpan.textContent = `A: ${card.answer}`;
+        answerSpan.title = card.answer; // Show full text on hover
+
+        cardDetails.appendChild(questionSpan);
+        cardDetails.appendChild(answerSpan);
+
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+
+        const deleteCardBtn = document.createElement('button');
+        deleteCardBtn.textContent = 'Delete Card';
+        deleteCardBtn.classList.add('btn-danger');
+        deleteCardBtn.onclick = () => deleteAdminCard(card.id);
+
+        actions.appendChild(deleteCardBtn);
+
+        item.appendChild(cardDetails);
+        item.appendChild(actions);
+        adminCardListEl.appendChild(item);
+    });
+}
+
+async function deleteAdminUser(userId, username) {
+    console.log(`Admin Action: deleteAdminUser triggered for user ${userId}`);
+    if (!confirm(`Are you sure you want to permanently delete user "${username}" (ID: ${userId}) and all their cards? This cannot be undone.`)) {
+        return;
+    }
+
+    showAdminStatusMessage(`Deleting user ${username}...`, 'info', 5000);
+    try {
+        const response = await fetchAdminAPI(`/users/${userId}`, { method: 'DELETE' });
+        if (!response.ok) { // 204 is ok
+             const errorData = await response.json().catch(() => ({}));
+             // Handle specific errors like trying to delete self (403) or not found (404)
+             if (response.status === 403) {
+                 throw new Error(errorData.error || "Admin cannot delete their own account.");
+             } else if (response.status === 404) {
+                 throw new Error("User not found.");
+             } else {
+                 throw new Error(errorData.error || `Failed to delete user (status: ${response.status})`);
+             }
+        }
+        showAdminStatusMessage(`User "${username}" deleted successfully.`, 'success', 3000);
+        // Refresh user list
+        fetchAdminUsers();
+        // Clear card list if the deleted user was selected
+        if (currentAdminSelectedUserId === userId) {
+            if (adminCardListEl) adminCardListEl.innerHTML = '<p>Select a user to view their cards.</p>';
+            if (adminSelectedUserDisplayEl) adminSelectedUserDisplayEl.textContent = 'Selected User: None';
+            currentAdminSelectedUserId = null;
+        }
+    } catch (error) {
+         if (!error.message.includes('Authentication failed')) {
+            console.error(`Admin Error deleting user ${userId}:`, error);
+            showAdminStatusMessage(`Error deleting user ${username}: ${error.message}`, 'error', 5000);
+         }
+    }
+}
+
+async function deleteAdminCard(cardId) {
+    console.log(`Admin Action: deleteAdminCard triggered for card ${cardId}`);
+     if (!confirm(`Are you sure you want to permanently delete card ID ${cardId}? This cannot be undone.`)) {
+        return;
+    }
+
+    showAdminStatusMessage(`Deleting card ${cardId}...`, 'info', 3000);
+     try {
+        const response = await fetchAdminAPI(`/cards/${cardId}`, { method: 'DELETE' });
+         if (!response.ok) { // 204 is ok
+             const errorData = await response.json().catch(() => ({}));
+             if (response.status === 404) {
+                 throw new Error("Card not found.");
+             } else {
+                 throw new Error(errorData.error || `Failed to delete card (status: ${response.status})`);
+             }
+        }
+        showAdminStatusMessage(`Card ${cardId} deleted successfully.`, 'success', 2000);
+        // Refresh card list for the currently selected user
+        if (currentAdminSelectedUserId) {
+            const selectedUsername = adminSelectedUserDisplayEl.textContent.split(' (ID:')[0].replace('Selected User: ', '');
+            fetchAdminUserCards(currentAdminSelectedUserId, selectedUsername);
+        }
+    } catch (error) {
+         if (!error.message.includes('Authentication failed')) {
+            console.error(`Admin Error deleting card ${cardId}:`, error);
+            showAdminStatusMessage(`Error deleting card ${cardId}: ${error.message}`, 'error', 5000);
+         }
+    }
+}
+
+
+function initializeAdminDashboard() {
+    console.log("Initializing Admin Dashboard UI and fetching data...");
+    // Fetch initial user list
+    fetchAdminUsers();
+
+    // Add listeners for admin-specific elements if not already done in initializeApp
+    // (We'll add them in initializeApp modification next)
+}
+
+
+// --- Initialize Application (Modified for Auth & Admin) ---
 function initializeApp() {
     console.log("Initializing app...");
 
@@ -1075,6 +1374,16 @@ function initializeApp() {
     deleteSelectedCardsBtn = document.getElementById('deleteSelectedCardsBtn');
     cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 
+    // Admin Elements
+    adminContainer = document.getElementById('adminContainer');
+    adminLogoutBtn = document.getElementById('adminLogoutBtn');
+    adminStatusMessageEl = document.getElementById('adminStatusMessage');
+    adminUserListEl = document.getElementById('adminUserList');
+    adminCardListEl = document.getElementById('adminCardList');
+    adminSelectedUserDisplayEl = document.getElementById('adminSelectedUserDisplay');
+    adminThemeToggleBtn = document.getElementById('adminThemeToggleBtn'); // Get admin theme button
+    adminPaletteToggleBtn = document.getElementById('adminPaletteToggleBtn'); // Get admin palette button
+
     // Attach Event Listeners
     // Auth
     if (loginBtn) loginBtn.addEventListener('click', handleLogin);
@@ -1083,6 +1392,32 @@ function initializeApp() {
     // Add Enter key listener for auth inputs
     if (usernameInput) usernameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
     if (passwordInput) passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+
+    // Admin Listeners
+    if (adminLogoutBtn) adminLogoutBtn.addEventListener('click', handleLogout);
+    // Add theme/palette listeners for admin buttons (reuse existing functions)
+    if (adminThemeToggleBtn) adminThemeToggleBtn.addEventListener('click', toggleTheme);
+    const adminThemeDropdown = document.getElementById('adminThemeDropdown');
+     if (adminThemeDropdown) {
+        const themePrefButtons = adminThemeDropdown.querySelectorAll('button[data-theme-preference]');
+        themePrefButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const preference = button.dataset.themePreference;
+                if (preference) setTheme(preference);
+            });
+        });
+    }
+    if (adminPaletteToggleBtn) adminPaletteToggleBtn.addEventListener('click', () => { /* Maybe toggle dropdown? */ }); // Basic listener
+    const adminPaletteDropdown = document.getElementById('adminPaletteDropdown');
+    if (adminPaletteDropdown) {
+        const palettePrefButtons = adminPaletteDropdown.querySelectorAll('button[data-palette-preference]');
+        palettePrefButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const preference = button.dataset.palettePreference;
+                if (preference) setPalette(preference);
+            });
+        });
+    }
 
     // Navigation & Core Actions
     if (flipBtn) flipBtn.addEventListener('click', flipCard);
@@ -1193,21 +1528,54 @@ function initializeApp() {
     loadTheme();
     loadPalette();
 
-    // Check for existing token
+    // Check for existing token and determine user type
     const storedToken = localStorage.getItem('authToken');
     if (storedToken) {
         console.log("Found stored auth token.");
         authToken = storedToken;
-        isLoggedIn = true;
-        // Hide auth, show main app
-        if (authContainer) authContainer.style.display = 'none';
-        if (mainContainer) mainContainer.style.display = 'block';
-        loadData(); // Load data for the logged-in user
+        let isAdminInit = false;
+        try {
+            const payloadBase64 = authToken.split('.')[1];
+            const decodedPayload = JSON.parse(atob(payloadBase64));
+            isAdminInit = decodedPayload.isAdmin === true;
+        } catch (e) {
+            console.error("Error decoding stored JWT on init:", e);
+            // Clear invalid token and treat as logged out
+            localStorage.removeItem('authToken');
+            authToken = null;
+        }
+
+        if (authToken) { // Proceed if token was valid
+            isLoggedIn = true;
+            if (authContainer) authContainer.style.display = 'none';
+
+            if (isAdminInit) {
+                console.log("Initializing as Admin based on stored token.");
+                if (mainContainer) mainContainer.style.display = 'none';
+                if (adminContainer) adminContainer.style.display = 'block';
+                initializeAdminDashboard();
+            } else {
+                console.log("Initializing as Regular User based on stored token.");
+                if (adminContainer) adminContainer.style.display = 'none';
+                if (mainContainer) mainContainer.style.display = 'block';
+                loadData();
+            }
+        } else {
+             // Token was invalid, ensure logged-out state
+             isLoggedIn = false;
+             if (authContainer) authContainer.style.display = 'block';
+             if (mainContainer) mainContainer.style.display = 'none';
+             if (adminContainer) adminContainer.style.display = 'none';
+             updateNavigationButtons();
+        }
+
     } else {
         console.log("No stored auth token found.");
-        // Show auth, hide main app (default state in HTML is already correct)
+        // Ensure logged-out state
+        isLoggedIn = false;
         if (authContainer) authContainer.style.display = 'block';
         if (mainContainer) mainContainer.style.display = 'none';
+        if (adminContainer) adminContainer.style.display = 'none';
         updateNavigationButtons(); // Ensure buttons are disabled initially
     }
 

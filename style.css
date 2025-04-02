@@ -938,3 +938,106 @@ body.dark-mode .collapsible-toggle:hover {
     visibility: visible;
     transform: translateY(0);
 }
+
+
+/* --- Admin Dashboard Styles --- */
+.admin-container {
+    background-color: var(--container-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px var(--shadow-color);
+    width: 100%;
+    max-width: 900px; /* Wider for admin view */
+    box-sizing: border-box;
+    transition: background-color 0.3s ease;
+    margin: auto;
+}
+
+.admin-container .app-header h1 {
+    font-size: 1.8em;
+}
+
+.admin-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.admin-section h2 {
+    text-align: left; /* Align section headers left */
+    border-bottom: none; /* Remove bottom border from h2 */
+    margin-bottom: 15px;
+    font-size: 1.4em;
+}
+
+.admin-user-list, .admin-card-list {
+    max-height: 40vh; /* Limit height */
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px;
+    background-color: var(--bg-color); /* Match page background */
+    margin-bottom: 20px;
+}
+
+.admin-user-item, .admin-card-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.95em;
+}
+.admin-user-item:last-child, .admin-card-item:last-child {
+    border-bottom: none;
+}
+
+.admin-user-item span, .admin-card-item span {
+    flex-grow: 1;
+    margin-right: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.admin-user-item .user-details {
+    font-size: 0.85em;
+    color: var(--text-muted-color);
+    margin-left: 15px;
+}
+
+.admin-card-item .card-details {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin-right: 10px;
+}
+.admin-card-item .card-details .question,
+.admin-card-item .card-details .answer {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 400px; /* Limit width */
+}
+.admin-card-item .card-details .answer {
+    font-size: 0.9em;
+    color: var(--text-muted-color);
+}
+
+
+.admin-user-item .actions, .admin-card-item .actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0; /* Prevent actions from shrinking */
+}
+
+/* Smaller buttons for admin lists */
+.admin-user-item button, .admin-card-item button {
+    padding: 5px 10px;
+    font-size: 0.85em;
+}
+
+#adminSelectedUserDisplay {
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--text-muted-color);
+}

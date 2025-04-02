@@ -153,6 +153,51 @@
 
     </div> <!-- /mainContainer -->
 
+    <!-- Admin Dashboard Container (Initially Hidden) -->
+    <div id="adminContainer" class="admin-container" style="display: none;">
+        <header class="app-header">
+            <h1>Admin Dashboard</h1>
+            <!-- Reuse theme/palette selectors if desired -->
+             <div class="theme-selector-container">
+                 <button id="adminThemeToggleBtn" title="Toggle Dark/Light Mode"><i class="fas fa-sun"></i></button>
+                 <div id="adminThemeDropdown" class="theme-dropdown">
+                     <button data-theme-preference="light"><i class="fas fa-sun"></i> Light</button>
+                     <button data-theme-preference="dark"><i class="fas fa-moon"></i> Dark</button>
+                     <button data-theme-preference="system"><i class="fas fa-desktop"></i> System</button>
+                 </div>
+             </div>
+             <div class="palette-selector-container">
+                  <button id="adminPaletteToggleBtn" title="Change Color Palette"><i class="fas fa-palette"></i></button>
+                  <div id="adminPaletteDropdown" class="palette-dropdown theme-dropdown">
+                      <button data-palette-preference="default"><i class="fas fa-circle" style="color: var(--primary-color);"></i> Default</button>
+                      <button data-palette-preference="warm"><i class="fas fa-circle" style="color: #e07a5f;"></i> Warm</button>
+                      <button data-palette-preference="rainbow"><i class="fas fa-circle" style="color: #8ecae6;"></i> Rainbow</button>
+                  </div>
+             </div>
+            <button id="adminLogoutBtn" class="btn-secondary" title="Logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+        </header>
+
+        <div id="adminStatusMessage" class="status-message"></div> <!-- For admin status messages -->
+
+        <div class="admin-section">
+            <h2>User Management</h2>
+            <div id="adminUserList" class="admin-user-list">
+                <!-- User list will be populated by JS -->
+                <p>Loading users...</p>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h2>Card Management (Selected User)</h2>
+            <div id="adminSelectedUserDisplay">Selected User: None</div>
+            <div id="adminCardList" class="admin-card-list">
+                 <!-- Cards for selected user will be populated by JS -->
+                 <p>Select a user to view their cards.</p>
+            </div>
+        </div>
+
+    </div> <!-- /adminContainer -->
+
     <!-- Import JSON Modal -->
     <div id="importModal" class="modal">
         <div class="modal-content">
