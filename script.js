@@ -173,15 +173,6 @@ async function handleRegister() {
         showAuthMessage("Username and password are required.", 'error');
         return;
     }
-    // Frontend Validation (mirroring backend)
-    if (username.length < 4 || username.length > 25) {
-        showAuthMessage('Username must be between 4 and 25 characters.', 'error');
-        return;
-    }
-    if (password.length < 4 || password.length > 25) {
-        showAuthMessage('Password must be between 4 and 25 characters.', 'error');
-        return;
-    }
 
     showAuthMessage("Registering...", 'info', 0); // Show indefinitely until response
     try {
@@ -549,11 +540,6 @@ async function addCard() {
     const question = questionInput.value.trim();
     const answer = answerInput.value.trim();
     if (!question || !answer) { showStatusMessage("Enter question and answer.", 'error', 3000); return; }
-    // Frontend Validation (Max Length)
-    if (question.length > 1000 || answer.length > 1000) {
-        showStatusMessage("Question and answer must be 1000 characters or less.", 'error', 4000);
-        return;
-    }
 
     const newCardData = { question, answer };
     showStatusMessage("Adding card...", 'info', 3000);
@@ -803,11 +789,6 @@ async function saveEdit() {
 
     if (!cardId) { console.error("Invalid ID stored for editing."); alert("Error: Cannot identify card to save."); return; }
     if (!newQuestion || !newAnswer) { alert("Question and answer cannot be empty."); return; }
-    // Frontend Validation (Max Length)
-    if (newQuestion.length > 1000 || newAnswer.length > 1000) {
-        alert("Question and answer must be 1000 characters or less.");
-        return;
-    }
 
     const updatedCardData = { question: newQuestion, answer: newAnswer };
     showStatusMessage("Saving changes...", 'info', 3000);

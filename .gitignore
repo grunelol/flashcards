@@ -8,7 +8,6 @@ LOGIN_SYSTEM_PLAN.txt
 README.txt
 security_suggestions.md
 admin-related.md
-refactoring_plan.md
 
 # Environment Variables
 # Never commit .env files containing secrets!
