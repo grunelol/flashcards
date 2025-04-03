@@ -192,6 +192,15 @@ const registerLimiter = rateLimit({
     keyGenerator: (req, res) => req.ip
 });
 
+const bulkLimiter = rateLimit({
+	windowMs: 5 * 60 * 1000, // 5 minutes
+	max: 5, // Limit each IP to 5 bulk requests per windowMs
+	message: { error: 'Too many bulk import attempts from this IP, please try again after 5 minutes' },
+    standardHeaders: true,
+	legacyHeaders: false,
+    keyGenerator: (req, res) => req.ip
+});
+
 // POST /api/auth/register - Register a new user
 // Apply limiter specifically to the register route
 authRouter.post('/register', registerLimiter, async (req, res, next) => {
@@ -392,7 +401,7 @@ cardRouter.delete('/:id', async (req, res, next) => {
 });
 
 // POST /api/cards/bulk - Add multiple flashcards for the user
-cardRouter.post('/bulk', async (req, res, next) => {
+cardRouter.post('/bulk', bulkLimiter, async (req, res, next) => { // Apply bulk limiter
     const userId = req.user.id;
     const cards = req.body;
     if (!Array.isArray(cards) || cards.length === 0) {
