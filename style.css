@@ -1047,3 +1047,68 @@ body.dark-mode .collapsible-toggle:hover {
     font-weight: 600;
     color: var(--text-muted-color);
 }
+/* Accessibility: Focus Styles */
+:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Reduced Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* Skeleton Loading Animation */
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #eee 25%, #ddd 50%, #eee 75%);
+    background-size: 2000px 100%;
+    animation: shimmer 1.5s infinite linear;
+    border-radius: var(--border-radius-base);
+}
+
+/* Enhance flashcard flip transition */
+.flashcard {
+    transition: transform 0.6s ease-in-out, box-shadow 0.3s ease;
+}
+.flashcard:hover:not(.flipped) {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px var(--shadow-color);
+}
+
+/* Animate progress bar smoothly */
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+/* Smooth dropdown and modal transitions */
+.theme-dropdown,
+.palette-dropdown,
+.modal-content {
+    transition: all 0.3s ease;
+}
+
+/* Button icon spacing */
+button i {
+    margin-right: 6px;
+}
+
+/* Status message fade-in */
+.status-message {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+.status-message.show {
+    opacity: 1;
+}

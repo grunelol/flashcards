@@ -1426,24 +1426,26 @@ function initializeApp() {
     adminUserListEl = document.getElementById('adminUserList');
     adminCardListEl = document.getElementById('adminCardList');
     adminSelectedUserDisplayEl = document.getElementById('adminSelectedUserDisplay');
-    adminThemeToggleBtn = document.getElementById('adminThemeToggleBtn'); // Get admin theme button
-    adminPaletteToggleBtn = document.getElementById('adminPaletteToggleBtn'); // Get admin palette button
+    adminThemeToggleBtn = document.getElementById('adminThemeToggleBtn');
+    adminPaletteToggleBtn = document.getElementById('adminPaletteToggleBtn');
 
     // Attach Event Listeners
-    // Auth
-    if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+    // Auth: attach login to form submit for password manager compatibility
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleLogin();
+        });
+    }
     if (registerBtn) registerBtn.addEventListener('click', handleRegister);
     if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
-    // Add Enter key listener for auth inputs
-    if (usernameInput) usernameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
-    if (passwordInput) passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
 
     // Admin Listeners
     if (adminLogoutBtn) adminLogoutBtn.addEventListener('click', handleLogout);
-    // Add theme/palette listeners for admin buttons (reuse existing functions)
     if (adminThemeToggleBtn) adminThemeToggleBtn.addEventListener('click', toggleTheme);
     const adminThemeDropdown = document.getElementById('adminThemeDropdown');
-     if (adminThemeDropdown) {
+    if (adminThemeDropdown) {
         const themePrefButtons = adminThemeDropdown.querySelectorAll('button[data-theme-preference]');
         themePrefButtons.forEach(button => {
             button.addEventListener('click', () => {
@@ -1452,7 +1454,7 @@ function initializeApp() {
             });
         });
     }
-    if (adminPaletteToggleBtn) adminPaletteToggleBtn.addEventListener('click', () => { /* Maybe toggle dropdown? */ }); // Basic listener
+    if (adminPaletteToggleBtn) adminPaletteToggleBtn.addEventListener('click', () => {});
     const adminPaletteDropdown = document.getElementById('adminPaletteDropdown');
     if (adminPaletteDropdown) {
         const palettePrefButtons = adminPaletteDropdown.querySelectorAll('button[data-palette-preference]');
@@ -1474,13 +1476,11 @@ function initializeApp() {
     if (deleteOptionsBtn) deleteOptionsBtn.addEventListener('click', openDeleteOptionsModal);
     if (shuffleBtn) shuffleBtn.addEventListener('click', shuffleCards);
     if (resetBtn) resetBtn.addEventListener('click', resetData);
-    if (reconnectBtn) reconnectBtn.addEventListener('click', loadData); // Reconnect now just reloads data if logged in
-    // Add/Import/Export
+    if (reconnectBtn) reconnectBtn.addEventListener('click', loadData);
     if (addCardBtn) addCardBtn.addEventListener('click', addCard);
     if (clearFormBtn) clearFormBtn.addEventListener('click', () => clearFormFields(true));
-    if (importJsonBtn) importJsonBtn.addEventListener('click', openImportModal); else console.error("CRITICAL: importJsonBtn not found!");
+    if (importJsonBtn) importJsonBtn.addEventListener('click', openImportModal);
     if (exportJsonBtn) exportJsonBtn.addEventListener('click', exportToJson);
-    // Theme & View Options
     if (themeToggleBtn) themeToggleBtn.addEventListener('click', toggleTheme);
     const themeDropdown = document.getElementById('themeDropdown');
     if (themeDropdown) {
@@ -1517,12 +1517,22 @@ function initializeApp() {
     if (deleteSelectedCardsBtn) deleteSelectedCardsBtn.addEventListener('click', deleteSelectedCards);
     if (deleteAllCardsBtn) deleteAllCardsBtn.addEventListener('click', deleteAllCards);
 
-
     // Close modals on outside click
     window.addEventListener('click', (event) => {
         if (importModal && event.target == importModal) closeImportModal();
         if (editModal && event.target == editModal) closeEditModal();
         if (deleteOptionsModal && event.target == deleteOptionsModal) closeDeleteOptionsModal();
+    });
+
+    // Focus trap and initial focus for modals
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('transitionend', () => {
+            if (modal.style.display === 'block') {
+                const focusable = modal.querySelector('button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])');
+                if (focusable) focusable.focus();
+            }
+        });
     });
 
     // Card flip listener
@@ -1585,12 +1595,11 @@ function initializeApp() {
             isAdminInit = decodedPayload.isAdmin === true;
         } catch (e) {
             console.error("Error decoding stored JWT on init:", e);
-            // Clear invalid token and treat as logged out
             localStorage.removeItem('authToken');
             authToken = null;
         }
 
-        if (authToken) { // Proceed if token was valid
+        if (authToken) {
             isLoggedIn = true;
             if (authContainer) authContainer.style.display = 'none';
 
@@ -1606,25 +1615,22 @@ function initializeApp() {
                 loadData();
             }
         } else {
-             // Token was invalid, ensure logged-out state
-             isLoggedIn = false;
-             if (authContainer) authContainer.style.display = 'block';
-             if (mainContainer) mainContainer.style.display = 'none';
-             if (adminContainer) adminContainer.style.display = 'none';
-             updateNavigationButtons();
+            isLoggedIn = false;
+            if (authContainer) authContainer.style.display = 'block';
+            if (mainContainer) mainContainer.style.display = 'none';
+            if (adminContainer) adminContainer.style.display = 'none';
+            updateNavigationButtons();
         }
 
     } else {
         console.log("No stored auth token found.");
-        // Ensure logged-out state
         isLoggedIn = false;
         if (authContainer) authContainer.style.display = 'block';
         if (mainContainer) mainContainer.style.display = 'none';
         if (adminContainer) adminContainer.style.display = 'none';
-        updateNavigationButtons(); // Ensure buttons are disabled initially
+        updateNavigationButtons();
     }
 
-    // Add listener for system theme changes
     const systemThemeMatcher = window.matchMedia('(prefers-color-scheme: dark)');
     systemThemeMatcher.addEventListener('change', () => {
         console.log("System theme changed detected");

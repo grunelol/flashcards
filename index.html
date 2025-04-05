@@ -12,32 +12,34 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<main role="main">
 
     <!-- Authentication Container -->
-    <div id="authContainer" class="auth-container">
+    <section id="authContainer" class="auth-container" aria-label="Login Section">
         <h1>Flashcards Login</h1>
-        <div id="authMessage" class="status-message" style="display: none;"></div> <!-- For login/register errors -->
-        <div class="form-group">
-            <label for="usernameInput">Username:</label>
-            <input type="text" id="usernameInput" placeholder="Enter username">
-            <span class="input-hint">Minimum 4 characters</span>
-        </div>
-        <div class="form-group">
-            <label for="passwordInput">Password:</label>
-            <input type="password" id="passwordInput" placeholder="Enter password">
-            <span class="input-hint">Minimum 4 characters</span>
-        </div>
-        <div class="form-actions">
-            <button id="loginBtn">Login</button>
-            <button id="registerBtn" class="btn-secondary">Register</button>
-        </div>
-    </div>
+        <form id="loginForm" autocomplete="on">
+            <div id="authMessage" class="status-message" aria-live="polite" style="display: none;"></div>
+            <div class="form-group">
+                <label for="usernameInput">Username:</label>
+                <input type="text" id="usernameInput" name="username" placeholder="Enter username" autocomplete="username" required>
+                <span class="input-hint">Minimum 4 characters</span>
+            </div>
+            <div class="form-group">
+                <label for="passwordInput">Password:</label>
+                <input type="password" id="passwordInput" name="password" placeholder="Enter password" autocomplete="current-password" required>
+                <span class="input-hint">Minimum 4 characters</span>
+            </div>
+            <div class="form-actions">
+                <button id="loginBtn" type="submit"><i class="fas fa-sign-in-alt"></i> Login</button>
+                <button id="registerBtn" type="button" class="btn-secondary"><i class="fas fa-user-plus"></i> Register</button>
+            </div>
+        </form>
+    </section>
 
-    <!-- Main Application Container (Initially Hidden) -->
-    <div id="mainContainer" class="main-container" style="display: none;">
+    <!-- Main Application Container -->
+    <section id="mainContainer" class="main-container" style="display: none;" aria-label="Flashcards Section">
         <header class="app-header">
             <h1>Enhanced Flashcards</h1>
-            <!-- Existing Theme/Palette Selectors test for git -->
             <div class="theme-selector-container">
                 <button id="themeToggleBtn" title="Toggle Dark/Light Mode"><i class="fas fa-sun"></i></button>
                 <div id="themeDropdown" class="theme-dropdown">
@@ -54,19 +56,16 @@
                      <button data-palette-preference="rainbow"><i class="fas fa-circle" style="color: #8ecae6;"></i> Rainbow</button>
                  </div>
             </div>
-            <!-- Logout Button -->
             <button id="logoutBtn" class="btn-secondary" title="Logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </header>
 
-        <!-- Loading Indicator -->
         <div id="loadingIndicator" class="loading-indicator" style="display: none;">
             <div class="spinner"></div>
             <p>Loading...</p>
         </div>
 
-        <div id="statusMessage" class="status-message"></div> <!-- For general app status -->
+        <div id="statusMessage" class="status-message" aria-live="polite"></div>
 
-        <!-- Filtering and Search -->
         <div class="filter-search-area">
             <div class="filter-group" style="display: none;">
                 <label for="filterStatus">Filter:</label>
@@ -84,12 +83,10 @@
             </div>
         </div>
 
-        <!-- Progress Bar -->
         <div class="progress-container">
             <div id="progressBar" class="progress-bar"></div>
         </div>
         <div id="progressText" class="progress-text">Card 0 / 0</div>
-
 
         <div class="flashcard-area">
             <div class="flashcard-container">
@@ -107,13 +104,13 @@
 
             <div class="card-counter">Card <span id="currentCardNum">0</span> of <span id="totalCards">0</span> (in current view)</div>
 
-            <div class="navigation">
-                <button id="prevBtn" title="Previous Card (Left Arrow)">‹ Prev</button>
-                <button id="flipBtn" title="Flip Card (Spacebar)">Flip</button>
-                <button id="editBtn" title="Edit Card">Edit</button>
+            <div class="navigation" role="navigation" aria-label="Flashcard Navigation">
+                <button id="prevBtn" title="Previous Card (Left Arrow)"><i class="fas fa-arrow-left"></i> Prev</button>
+                <button id="flipBtn" title="Flip Card (Spacebar)"><i class="fas fa-retweet"></i> Flip</button>
+                <button id="editBtn" title="Edit Card"><i class="fas fa-edit"></i> Edit</button>
                 <button id="deleteThisCardBtn" class="btn-secondary" title="Delete This Card"><i class="fas fa-trash-alt"></i></button>
-                <button id="randomBtn" title="Random Card">Random</button>
-                <button id="nextBtn" title="Next Card (Right Arrow)">Next ›</button>
+                <button id="randomBtn" title="Random Card"><i class="fas fa-random"></i> Random</button>
+                <button id="nextBtn" title="Next Card (Right Arrow)">Next <i class="fas fa-arrow-right"></i></button>
             </div>
         </div>
 
@@ -124,11 +121,11 @@
              </h2>
              <div id="manageDeckContent" class="collapsible-content">
                  <div class="control-buttons">
-                    <button id="shuffleBtn">Shuffle View</button>
-                    <button id="importJsonBtn">Import JSON</button>
-                    <button id="exportJsonBtn">Export JSON</button>
-                    <button id="deleteOptionsBtn" class="btn-warning">Delete Options...</button>
-                    <button id="resetBtn" class="btn-danger">Reset Deck</button>
+                    <button id="shuffleBtn"><i class="fas fa-random"></i> Shuffle View</button>
+                    <button id="importJsonBtn"><i class="fas fa-file-import"></i> Import JSON</button>
+                    <button id="exportJsonBtn"><i class="fas fa-file-export"></i> Export JSON</button>
+                    <button id="deleteOptionsBtn" class="btn-warning"><i class="fas fa-trash"></i> Delete Options...</button>
+                    <button id="resetBtn" class="btn-danger"><i class="fas fa-redo"></i> Reset Deck</button>
                     <button id="reconnectBtn" class="btn-secondary" title="Reload cards from database"><i class="fas fa-sync-alt"></i> Reconnect</button>
                  </div>
 
@@ -143,21 +140,20 @@
                         <textarea id="answerInput" rows="3" placeholder="Enter the answer or definition"></textarea>
                     </div>
                     <div class="form-actions">
-                        <button id="addCardBtn">Add Card</button>
-                        <button id="clearFormBtn" class="btn-secondary">Clear Form</button>
+                        <button id="addCardBtn"><i class="fas fa-plus"></i> Add Card</button>
+                        <button id="clearFormBtn" class="btn-secondary"><i class="fas fa-eraser"></i> Clear Form</button>
                     </div>
                  </div>
 
-             </div> <!-- End of manageDeckContent -->
-        </div> <!-- End of controls-area -->
+             </div>
+        </div>
 
-    </div> <!-- /mainContainer -->
+    </section>
 
-    <!-- Admin Dashboard Container (Initially Hidden) -->
-    <div id="adminContainer" class="admin-container" style="display: none;">
+    <!-- Admin Dashboard Container -->
+    <section id="adminContainer" class="admin-container" style="display: none;" aria-label="Admin Dashboard">
         <header class="app-header">
             <h1>Admin Dashboard</h1>
-            <!-- Reuse theme/palette selectors if desired -->
              <div class="theme-selector-container">
                  <button id="adminThemeToggleBtn" title="Toggle Dark/Light Mode"><i class="fas fa-sun"></i></button>
                  <div id="adminThemeDropdown" class="theme-dropdown">
@@ -177,12 +173,11 @@
             <button id="adminLogoutBtn" class="btn-secondary" title="Logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
         </header>
 
-        <div id="adminStatusMessage" class="status-message"></div> <!-- For admin status messages -->
+        <div id="adminStatusMessage" class="status-message" aria-live="polite"></div>
 
         <div class="admin-section">
             <h2>User Management</h2>
             <div id="adminUserList" class="admin-user-list">
-                <!-- User list will be populated by JS -->
                 <p>Loading users...</p>
             </div>
         </div>
@@ -191,18 +186,17 @@
             <h2>Card Management (Selected User)</h2>
             <div id="adminSelectedUserDisplay">Selected User: None</div>
             <div id="adminCardList" class="admin-card-list">
-                 <!-- Cards for selected user will be populated by JS -->
                  <p>Select a user to view their cards.</p>
             </div>
         </div>
 
-    </div> <!-- /adminContainer -->
+    </section>
 
     <!-- Import JSON Modal -->
-    <div id="importModal" class="modal">
+    <div id="importModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="importModalTitle">
         <div class="modal-content">
-            <span class="close-btn" id="closeImportModalBtn">&times;</span>
-            <h2>Import Cards from JSON</h2>
+            <span class="close-btn" id="closeImportModalBtn" tabindex="0" role="button" aria-label="Close Import Modal">&times;</span>
+            <h2 id="importModalTitle">Import Cards from JSON</h2>
             <p>Paste your JSON data below. It should be an array of objects, each with a "question" and "answer" key:</p>
             <pre><code>[
   { "question": "Q1", "answer": "A1" },
@@ -217,11 +211,11 @@
     </div>
 
     <!-- Edit Card Modal -->
-    <div id="editModal" class="modal">
+    <div id="editModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
         <div class="modal-content">
-            <span class="close-btn" id="closeEditModalBtn">&times;</span>
-            <h2>Edit Card</h2>
-            <input type="hidden" id="editCardIndexInput"> <!-- Stores card ID -->
+            <span class="close-btn" id="closeEditModalBtn" tabindex="0" role="button" aria-label="Close Edit Modal">&times;</span>
+            <h2 id="editModalTitle">Edit Card</h2>
+            <input type="hidden" id="editCardIndexInput">
             <div class="form-group">
                 <label for="editQuestionInput">Question:</label>
                 <textarea id="editQuestionInput" rows="4"></textarea>
@@ -238,14 +232,12 @@
     </div>
 
     <!-- Delete Options Modal -->
-    <div id="deleteOptionsModal" class="modal">
+    <div id="deleteOptionsModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteOptionsModalTitle">
         <div class="modal-content">
-            <span class="close-btn" id="closeDeleteOptionsModalBtn">&times;</span>
-            <h2>Delete Cards</h2>
+            <span class="close-btn" id="closeDeleteOptionsModalBtn" tabindex="0" role="button" aria-label="Close Delete Options Modal">&times;</span>
+            <h2 id="deleteOptionsModalTitle">Delete Cards</h2>
             <p>Select cards to delete:</p>
-            <div id="deleteCardList" class="delete-card-list">
-                <!-- Card list will be populated by JS -->
-            </div>
+            <div id="deleteCardList" class="delete-card-list"></div>
             <div class="modal-actions delete-actions">
                  <button id="deleteAllCardsBtn" class="btn-danger">Delete ALL Cards</button>
                  <button id="deleteSelectedCardsBtn" class="btn-warning">Delete Selected</button>
@@ -254,6 +246,7 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+</main>
+<script src="script.js"></script>
 </body>
 </html>
