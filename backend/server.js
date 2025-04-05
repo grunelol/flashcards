@@ -3,14 +3,16 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const session = require('express-session');
 const { Pool } = require('pg');
-const morgan = require('morgan'); // Require morgan
+const morgan = require('morgan');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+// REMOVE jsonwebtoken for zero trust
+// const jwt = require('jsonwebtoken');
 const createDOMPurify = require('dompurify');
 const { JSDOM } = require('jsdom');
 const rateLimit = require('express-rate-limit');
-const helmet = require('helmet'); // Require helmet
+const helmet = require('helmet');
 
 // Setup DOMPurify
 const window = new JSDOM('').window;
@@ -18,24 +20,35 @@ const DOMPurify = createDOMPurify(window);
 
 const app = express();
 const SALT_ROUNDS = 10; // For bcrypt hashing
-const JWT_SECRET = process.env.JWT_SECRET || 'your-default-very-strong-secret-key'; // CHANGE THIS and use environment variable!
 const MAX_CARDS_PER_USER = 500;
 
-if (JWT_SECRET === 'your-default-very-strong-secret-key') {
-    console.warn("WARNING: Using default JWT_SECRET. Set a strong secret in your environment variables!");
-}
+// REMOVE JWT secret warning
 
 // --- Middleware ---
 app.use(morgan('dev')); // HTTP request logging
-app.use(helmet()); // Use helmet for security headers
+app.use(helmet());
 
-// Enable CORS - Restrict to deployed frontend URL and explicitly handle preflight
+// Enable CORS with credentials for cookie auth
 app.use(cors({
-    origin: ['https://flashcardsgrune.netlify.app', 'https://fcg-dev.netlify.app'], // Allow both deployed and dev frontend URLs
+    origin: ['https://flashcardsgrune.netlify.app', 'https://fcg-dev.netlify.app'],
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type'],
     preflightContinue: false,
     optionsSuccessStatus: 204
+}));
+
+// Session middleware
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'replace_this_secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: false, // Set to true in production with HTTPS
+        sameSite: 'strict',
+        maxAge: 1000 * 60 * 15 // 15 minutes
+    }
 }));
 
 app.use(express.json()); // Parse JSON request bodies
@@ -117,37 +130,30 @@ initializeDatabase(); // Run initialization
 
 // --- Authentication Middleware ---
 // --- Admin Authentication Middleware ---
+function authenticate(req, res, next) {
+    if (req.session && req.session.user) {
+        req.user = req.session.user;
+        next();
+    } else {
+        res.sendStatus(401);
+    }
+}
+
 function authenticateAdmin(req, res, next) {
-    authenticateToken(req, res, () => { // First, run the standard token authentication
-        // Check if the user object exists and if isAdmin is true
-        if (req.user && req.user.isAdmin === true) {
-            console.log(`Admin Middleware: Access granted for admin user ID: ${req.user.id}`);
-            next(); // User is admin, proceed
+    authenticate(req, res, () => {
+        if (req.user && req.user.isAdmin) {
+            next();
         } else {
-            console.log(`Admin Middleware: Access denied. User ID: ${req.user ? req.user.id : 'N/A'}, IsAdmin: ${req.user ? req.user.isAdmin : 'N/A'}`);
-            res.status(403).json({ error: 'Forbidden: Requires admin privileges.' }); // Forbidden if not admin
+            res.sendStatus(403);
         }
     });
 }
 
 
 // --- Standard Authentication Middleware ---
+/* REMOVE JWT token middleware entirely for zero trust
 function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-    if (token == null) {
-        console.log('Auth Middleware: No token provided');
-        return res.sendStatus(401); // if there isn't any token
-    }
-
-    jwt.verify(token, JWT_SECRET, (err, userPayload) => {
-        if (err) {
-            console.log('Auth Middleware: Token verification failed:', err.message);
-            return res.sendStatus(403); // Forbidden if token is invalid
-        }
-        // Attach user info (at least the ID) to the request object
-        // Attach user info (ID and admin status) to the request object
+    ...
         req.user = { id: userPayload.userId, isAdmin: userPayload.isAdmin };
         console.log(`Auth Middleware: Token verified for user ID: ${req.user.id}`);
         next(); // proceed to the next middleware or route handler
@@ -256,13 +262,11 @@ authRouter.post('/login', loginLimiter, async (req, res, next) => {
             return res.status(401).json({ error: 'Invalid credentials.' }); // Unauthorized
         }
 
-        // Generate JWT
-        // Include user ID and admin status in payload
-        const tokenPayload = { userId: user.id, isAdmin: user.is_admin || false };
-        const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '1d' }); // Token expires in 1 day
+        // Create session
+        req.session.user = { id: user.id, isAdmin: user.is_admin || false };
 
         console.log(`Login successful for user ID: ${user.id}`);
-        res.json({ token }); // Send token back to client
+        res.json({ success: true }); // No token sent
     } catch (err) {
         console.error('Error logging in user:', err.stack);
         next(err);
@@ -273,7 +277,7 @@ app.use('/api/auth', authRouter); // Mount auth routes
 
 // == Card Routes (Protected) ==
 const cardRouter = express.Router();
-cardRouter.use(authenticateToken); // Apply auth middleware to all card routes
+cardRouter.use(authenticate); // Use session-based auth middleware
 
 // GET /api/cards - Fetch user's flashcards
 cardRouter.get('/', async (req, res, next) => {
