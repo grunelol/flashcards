@@ -151,14 +151,6 @@ function authenticateAdmin(req, res, next) {
 
 
 // --- Standard Authentication Middleware ---
-/* REMOVE JWT token middleware entirely for zero trust
-function authenticateToken(req, res, next) {
-    ...
-        req.user = { id: userPayload.userId, isAdmin: userPayload.isAdmin };
-        console.log(`Auth Middleware: Token verified for user ID: ${req.user.id}`);
-        next(); // proceed to the next middleware or route handler
-    });
-}
 
 // --- API Routes ---
 
