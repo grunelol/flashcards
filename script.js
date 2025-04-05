@@ -245,7 +245,7 @@ async function handleLogin() {
         // --- Login Success ---
         authToken = data.token;
         isLoggedIn = true;
-        localStorage.setItem('authToken', authToken); // Store token
+        sessionStorage.setItem('authToken', authToken); // Store token in sessionStorage only
 
         // --- Decode JWT Payload to check admin status ---
         let isAdmin = false;
@@ -304,7 +304,7 @@ function handleLogout() {
     console.log("Action: handleLogout triggered");
     authToken = null;
     isLoggedIn = false;
-    localStorage.removeItem('authToken');
+    sessionStorage.removeItem('authToken');
 
     // Clear app state
     flashcardsData = [];
@@ -1589,7 +1589,7 @@ function initializeApp() {
     loadPalette();
 
     // Check for existing token and determine user type
-    const storedToken = localStorage.getItem('authToken');
+    const storedToken = sessionStorage.getItem('authToken');
     if (storedToken) {
         console.log("Found stored auth token.");
         authToken = storedToken;
