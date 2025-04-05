@@ -238,10 +238,10 @@ async function handleLogin() {
             }
             return; // Stop execution here if response was not ok
         }
-
-        if (!data.token) {
-            throw new Error("Login successful, but no token received from server.");
-        }
+// In zero trust mode, no token is returned; rely on session cookie
+// if (!data.token) {
+//     throw new Error("Login successful, but no token received from server.");
+// }
 
         // --- Login Success ---
         // In zero trust frontend, do not store or handle JWT tokens
