@@ -249,20 +249,9 @@ async function handleLogin() {
         isLoggedIn = true; // Assume backend sets HttpOnly cookie
         // sessionStorage.setItem('authToken', authToken);
 
-        // --- Decode JWT Payload to check admin status ---
-        let isAdmin = false;
-        try {
-            const payloadBase64 = authToken.split('.')[1];
-            const decodedPayload = JSON.parse(atob(payloadBase64));
-            isAdmin = decodedPayload.isAdmin === true;
-            // Avoid logging JWT payload in production
-            if (!isProduction) console.log("Decoded JWT Payload");
-        } catch (e) {
-            if (!isProduction) console.error("Error decoding JWT payload");
-            handleLogout();
-            showAuthMessage("Login failed. Please try again.", 'error');
-            return;
-        }
+        // In zero trust mode, no JWT to decode; rely on backend session
+        let isAdmin = false; // Default to false
+        // Optionally, fetch /api/user/status endpoint to get user info if backend provides it
 
         // --- Login Success ---
         isLoggedIn = true; // Set global logged in flag
