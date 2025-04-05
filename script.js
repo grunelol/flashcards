@@ -106,12 +106,13 @@ let loginRetryInterval = null; // Interval ID for login rate limit countdown
 async function fetchWithAuth(url, options = {}) {
     const headers = {
         'Content-Type': 'application/json',
-        ...options.headers, // Allow overriding content-type or adding others
+        ...options.headers,
     };
 
-    if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
-    }
+    // REMOVE Authorization header for zero trust frontend
+    // if (authToken) {
+    //     headers['Authorization'] = `Bearer ${authToken}`;
+    // }
 
     const fetchOptions = {
         ...options,
@@ -243,9 +244,10 @@ async function handleLogin() {
         }
 
         // --- Login Success ---
-        authToken = data.token;
-        isLoggedIn = true;
-        sessionStorage.setItem('authToken', authToken); // Store token in sessionStorage only
+        // In zero trust frontend, do not store or handle JWT tokens
+        authToken = null;
+        isLoggedIn = true; // Assume backend sets HttpOnly cookie
+        // sessionStorage.setItem('authToken', authToken);
 
         // --- Decode JWT Payload to check admin status ---
         let isAdmin = false;
@@ -1589,7 +1591,8 @@ function initializeApp() {
     loadPalette();
 
     // Check for existing token and determine user type
-    const storedToken = sessionStorage.getItem('authToken');
+    // In zero trust frontend, do not load or store tokens
+    const storedToken = null;
     if (storedToken) {
         console.log("Found stored auth token.");
         authToken = storedToken;
