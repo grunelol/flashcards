@@ -1,3 +1,5 @@
+const isProduction = false; // Set to true in production to suppress debug logs
+
 // --- DOM Elements ---
 // Auth Elements
 const authContainer = document.getElementById('authContainer');
@@ -115,8 +117,13 @@ async function fetchWithAuth(url, options = {}) {
         ...options,
         headers,
     };
-
-    console.log(`Fetching: ${url} with options:`, { ...fetchOptions, body: options.body ? '...' : undefined }); // Log fetch details (hide body)
+if (!isProduction) {
+    const safeOptions = { ...fetchOptions };
+    if (safeOptions.headers && safeOptions.headers.Authorization) {
+        safeOptions.headers = { ...safeOptions.headers, Authorization: 'Bearer [REDACTED]' };
+    }
+    console.log(`Fetching: ${url} with options:`, safeOptions);
+}
 
     try {
         const response = await fetch(url, fetchOptions);
@@ -185,17 +192,15 @@ async function handleRegister() {
         const data = await response.json(); // Try to parse JSON regardless of status
 
         if (!response.ok) {
-            // Use error message from backend if available, otherwise generic
-            throw new Error(data.error || `Registration failed (status: ${response.status})`);
+            throw new Error("Registration failed. Please check your input.");
         }
 
         showAuthMessage("Registration successful! Please log in.", 'success', 5000);
-        // Clear password field after successful registration
         if (passwordInput) passwordInput.value = '';
 
     } catch (error) {
-        console.error("Registration error:", error);
-        showAuthMessage(`Registration failed: ${error.message}`, 'error');
+        if (!isProduction) console.error("Registration error");
+        showAuthMessage("Registration failed. Please try again.", 'error');
     }
 }
 
@@ -248,13 +253,13 @@ async function handleLogin() {
             const payloadBase64 = authToken.split('.')[1];
             const decodedPayload = JSON.parse(atob(payloadBase64));
             isAdmin = decodedPayload.isAdmin === true;
-            console.log("Decoded JWT Payload:", decodedPayload);
+            // Avoid logging JWT payload in production
+            if (!isProduction) console.log("Decoded JWT Payload");
         } catch (e) {
-            console.error("Error decoding JWT payload:", e);
-            // Handle error - perhaps logout or show error message
+            if (!isProduction) console.error("Error decoding JWT payload");
             handleLogout();
-            showAuthMessage("Login failed: Could not process user role.", 'error');
-            return; // Stop execution
+            showAuthMessage("Login failed. Please try again.", 'error');
+            return;
         }
 
         // --- Login Success ---
